@@ -1,0 +1,164 @@
+/* ============================================================
+   K8 Panel · Ajustes para celular y tablet (23-11-2026, revisión completa)
+   Va al final: solo corrige tamaños, márgenes y desbordes en pantallas chicas; no cambia el escritorio.
+   ============================================================ */
+
+@media (max-width: 900px) {
+  /* Nada se sale por el costado: la página nunca se desplaza hacia los lados */
+  .shell { max-width: 100%; overflow-x: clip; }
+  .main, .content { min-width: 0; max-width: 100%; }
+
+  /* Las columnas pueden encogerse (si no, un texto largo ensancha toda la tarjeta) */
+  .content :is(.grid, .cmp-2, .cmp-top, .cmp-fila, .ivx-big, .ivx-hero, .ivx-row2, .ivx-row3, .ivx-cms, .ivx-light-body, .cp-cuerpo, .cp-vs, .row, .list-item) > * { min-width: 0; }
+  .content .cmp-2 { grid-template-columns: minmax(0, 1fr); }
+  .content :is(.card, .ivx-card, .ivx-light, .list-item) { overflow-wrap: anywhere; }
+
+  /* Selectores de período, filtros y pestañas: se deslizan con el dedo en una sola línea */
+  .ivx-seg, .tabs, .seg {
+    max-width: 100%; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  }
+  .ivx-seg::-webkit-scrollbar, .tabs::-webkit-scrollbar, .seg::-webkit-scrollbar { display: none; }
+  .ivx-seg button, .tabs button, .seg button { flex: none; white-space: nowrap; }
+  .ivx-filtros { min-width: 0; }
+  .ivx-filtros > * { max-width: 100%; }
+
+  /* Tablas anchas: se desplazan dentro de su tarjeta, no mueven la página */
+  .content table.table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Filas de botones: bajan a la línea siguiente en vez de salirse */
+  .content .row:has(> .btn, > a.btn) { flex-wrap: wrap; }
+  .page-head, .ivx-top { min-width: 0; }
+
+  /* Barra inferior: son 6 apps (Inicio, Tareas, Productos, Estados, Campañas, Informes) */
+  .tabbar { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding-left: 4px; padding-right: 4px; }
+  .tab-item { min-width: 0; padding: 6px 0; font-size: 10px; }
+  .tab-item > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tab-item .ic { width: 38px; height: 26px; }
+
+  /* Escribir en un celular sin que se acerque la pantalla (iOS acerca si la letra es menor a 16 px) */
+  .topbar .search input, .content input.input, .content select, .content textarea, .acc-clave input, .ivx-buscar input, .cp-kw input { font-size: 16px; }
+
+  /* Botones e íconos cómodos para el dedo */
+  .icon-btn.sm { min-width: 34px; min-height: 34px; }
+  .btn.sm { min-height: 34px; }
+  .ck-box { width: 24px; height: 24px; }
+
+  /* Ventanas (modales): margen inferior para la barra del sistema */
+  .modal-foot { padding-bottom: calc(12px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+}
+
+/* ---------- Teléfono (hasta 600 px) ---------- */
+@media (max-width: 600px) {
+  .content .grid:not(:has(> .card.flat)):not(:has(> .kpi)) { grid-template-columns: minmax(0, 1fr) !important; }
+  .shell { padding: 8px; gap: 8px; }
+  .topbar { padding: 6px 8px; gap: 6px; }
+  .topbar .icon-btn { width: 38px; height: 38px; }
+  .topbar #pdf-btn { display: none; }   /* el PDF de la sección se imprime mejor desde el computador */
+  .av-btn .av.lg { width: 38px; height: 38px; }
+  .brand-top img { width: 30px; height: 30px; }
+
+  /* Títulos grandes que no se coman la pantalla */
+  .ivx-h1 { font-size: 34px; }
+  .ivx-top { flex-direction: column; align-items: stretch; gap: 12px; }
+  .ivx-top .actions { justify-content: flex-start; flex-wrap: wrap; }
+  h1 { font-size: 24px; }
+
+  /* Tarjetas con un poco menos de relleno: más espacio para las cifras */
+  .ivx-card { padding: 16px; border-radius: 20px; }
+  .ivx-num { font-size: clamp(34px, 11vw, 46px); }
+  .card { padding: 14px; }
+
+  /* K8 vs TLA: las dos marcas una debajo de la otra */
+  .content .cmp-top { grid-template-columns: minmax(0, 1fr); gap: 8px; text-align: left; }
+  .content .cmp-top > :nth-child(2) { justify-self: start; }
+
+  /* Selector de marca de Informes: dos botones que se reparten el ancho */
+  .ivx-marcas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ivx-marca { min-width: 0; }
+  .ivx-marca small { white-space: normal; }
+
+  /* Pantalla de ingreso */
+  .acc { padding: 20px 14px; align-items: start; padding-top: 12vh; }
+}
+
+/* ---------- Tablet (601 a 900 px) ---------- */
+@media (min-width: 601px) and (max-width: 900px) {
+  .shell { padding: 12px; }
+  .ivx-h1 { font-size: 40px; }
+  .ivx-card { padding: 18px; }
+}
+
+/* Encabezados de Sitio web / Mercado Libre / WhatsApp: el bloque de estado y botones baja a su propia línea */
+@media (max-width: 900px) {
+  .content .row.wrap > .row[style*="flex:none"] { flex: 1 1 100% !important; flex-wrap: wrap; min-width: 0; }
+}
+
+/* Tarjetas de cifras (Inicio e Informes): sin relleno doble en el teléfono */
+@media (max-width: 600px) {
+  .ivx-card:has(> .ivx-big), .ivx-big.ivx-card { padding: 4px 0; }
+  .ivx-m { padding: 18px 18px 16px; }
+}
+
+@media (max-width: 600px) {
+  /* Migas de la barra superior: en el teléfono solo el nombre de la sección actual */
+  .topbar .crumbs > :not(b), .topbar .crumbs .sep { display: none; }
+  .topbar .crumbs b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+  /* Detalle de cliente: el vendedor baja debajo del nombre, en una línea */
+  .ivx-det-head { flex-wrap: wrap; gap: 12px; }
+  .ivx-det-head > div:first-child { flex: 1 1 100%; min-width: 0; }
+  .ivx-det-v { flex: 1 1 100%; justify-content: flex-start; text-align: left; }
+  .ivx-det-v b { display: inline !important; }
+  /* Selector de marca: solo logo y nombre (el detalle de vendedores ya sale debajo del título) */
+  .ivx-marca small { display: none; }
+  .ivx-marca { padding: 10px 12px; }
+}
+
+@media (max-width: 900px) {
+  /* Tablas: el texto no se corta letra por letra; la tabla se desliza de lado dentro de su tarjeta */
+  .content table.table, .content table.table * { overflow-wrap: normal; word-break: normal; }
+  .content table.table th, .content table.table td { white-space: nowrap; }
+  .content table.table td:first-child { white-space: normal; min-width: 110px; max-width: 46vw; }
+}
+
+@media (max-width: 900px) {
+  /* En filas: montos, etiquetas y botones no se parten; el texto descriptivo es el que se ajusta */
+  .content .row > :is(.chip, .btn, .tag), .content .row.sm > .spacer ~ b { flex-shrink: 0; white-space: nowrap; }
+}
+@media (max-width: 600px) {
+  /* Barra superior más despejada: el avatar se quita (Mi perfil sigue en el engranaje) */
+  .topbar .av-btn { display: none; }
+  .topbar .crumbs { font-size: 15px; }
+}
+
+@media (max-width: 600px) {
+  /* Calendario: mes en una línea entre las flechas; lo demás baja a la línea siguiente */
+  .cal-head { flex-wrap: wrap; row-gap: 8px; }
+  .cal-head h3 { flex: 1 1 auto; min-width: 0 !important; white-space: nowrap; font-size: 16px; }
+  .cal-head > :nth-child(n+4) { flex: none; }
+}
+
+@media (max-width: 600px) {
+  /* Ficha de producto: la foto no ocupa toda la primera pantalla */
+  .content .card.flat > .ph[style*="aspect-ratio:1"] { aspect-ratio: auto !important; height: 190px; }
+}
+
+@media (max-width: 640px) {
+  /* Ingreso: las dos tarjetas caben en el ancho del teléfono */
+  .acc-ops { grid-template-columns: minmax(0, 1fr); }
+  .acc-op { min-width: 0; padding: 18px; }
+  .acc-clave input { min-width: 0; }
+}
+
+/* ---------- Tablet en horizontal y pantallas medianas (barra superior con menú lateral) ---------- */
+/* El buscador y las migas ceden espacio para que el engranaje nunca quede fuera de la pantalla */
+.topbar .search { min-width: 0; flex-shrink: 1; }
+.topbar .crumbs { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar .crumbs > * { white-space: nowrap; }
+.topbar > :is(.icon-btn, .menu-wrap, .av-btn, .lector-chip, .brand-top) { flex-shrink: 0; }
+@media (min-width: 901px) and (max-width: 1280px) {
+  .lector-chip { font-size: 0; gap: 0; padding: 0 9px; }
+  .lector-chip svg { width: 15px; height: 15px; }
+  .topbar .search { flex: 1 1 180px; max-width: 320px; }
+  .topbar .search kbd { display: none; }
+}

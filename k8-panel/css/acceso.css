@@ -63,3 +63,7 @@ button.acc-op:active { transform: translateY(0) scale(.99); }
 
 /* ---------- Versión publicada en la web: sin servidor, se ocultan los botones que lo necesitan ---------- */
 .publicado :is(#inf-excel, #inf-cli-xls, #inf-actualizar, #inf-cargar, #inf-pbi, #ads-refresh, #web-refresh, #ml-refresh, #pub-btn) { display: none !important; }
+/* En la web no se publican los manuales (docs/): sus enlaces se ocultan */
+.publicado a[href^="docs/"], .publicado a[href*="/docs/"] { display: none !important; }
+/* Checklist como lector: sin agregar ni borrar */
+.lector .ck-nueva, .lector .ck-del { display: none !important; }

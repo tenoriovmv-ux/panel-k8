@@ -16,3 +16,12 @@
 .lector :is(#drawer-root, .drawer) :is(input:not([type=search]), textarea, select) { pointer-events: none; opacity: .8; }
 /* La etapa de cada fila del Gantt se ve, pero no se puede cambiar */
 .lector select[data-stage-of] { pointer-events: none; }
+
+/* ---------- Celular (23-11): ventanas con el título arriba y la descripción debajo ---------- */
+@media (max-width: 700px) {
+  .m-head { flex-wrap: wrap; gap: 4px 10px; }
+  .m-head h3 { flex: 1 1 100%; }
+  .m-head .sub { flex: 1 1 100%; text-align: left; }
+  .modal { max-width: calc(100vw - 16px); }
+  .modal .table, .modal table { display: block; overflow-x: auto; }
+}

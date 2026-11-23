@@ -248,7 +248,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Barra inferior (solo celular y tablet): las cinco apps como en una app nativa
 function tabbarHtml(route) {
-  return `<nav class="tabbar">${APPS.map(a => `<button class="tab-item ${route.app === a.id ? 'on' : ''}" style="--c:${a.c}" data-nav="${a.id}"><span class="ic">${a.icon(18)}</span><span>${a.id === 'marketing' ? 'Marketing' : a.id === 'estados' ? 'Estados' : a.name}</span></button>`).join('')}</nav>`;
+  return `<nav class="tabbar">${APPS.map(a => `<button class="tab-item ${route.app === a.id ? 'on' : ''}" style="--c:${a.c}" data-nav="${a.id}"><span class="ic">${a.icon(18)}</span><span>${a.id === 'estados' ? 'Estados' : a.name}</span></button>`).join('')}</nav>`;
 }
 
 // ---------- Entrada animada del contenido (23-11, Vicente: «una animación más profesional») ----------
