@@ -67,3 +67,5 @@ button.acc-op:active { transform: translateY(0) scale(.99); }
 .publicado a[href^="docs/"], .publicado a[href*="/docs/"] { display: none !important; }
 /* Checklist como lector: sin agregar ni borrar */
 .lector .ck-nueva, .lector .ck-del { display: none !important; }
+/* En la web, los botones de Informes (actualizar y Excel) no existen: no se deja su espacio vacío */
+.publicado .ivx-top .actions { display: none !important; }
