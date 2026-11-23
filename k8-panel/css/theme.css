@@ -1,0 +1,261 @@
+/* ============================================================
+   K8 Panel · Tokens de diseño (claro / oscuro)
+   ============================================================ */
+:root {
+  /* tipografía */
+  --font: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Manrope", "Inter", system-ui, sans-serif;
+
+  /* radios y sombras */
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px;
+  --shadow-sm: 0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.04);
+  --shadow-md: 0 2px 6px rgba(16,24,40,.05), 0 12px 32px rgba(16,24,40,.08);
+  --shadow-lg: 0 8px 16px rgba(16,24,40,.08), 0 28px 64px rgba(16,24,40,.14);
+  --blur: 22px;
+
+  /* colores de marca y apps */
+  --k8-black: #141414;
+  --app-inicio:    #1F2937;
+  --app-marketing: #7C5CFF;
+  --app-productos: #0FA3A0;
+  --app-estados:   #3B6EF5;
+  --app-campanas:  #F97316;
+
+  /* líneas de negocio */
+  --line-workwear:  #F5A623;
+  --line-outdoor:   #E8541C;
+  --line-corporate: #2B3F8C;
+  --line-clinic:    #4A9FD8;
+  --line-global:    #1A1A1A;
+  --line-fabrics:   #E6E6E3;
+
+  /* etapas (mismas que Estados) */
+  --st-0:#94A3B8; --st-1:#4F7CFF; --st-2:#9B6BFF; --st-3:#FF8A3D; --st-4:#22B8CF;
+  --st-5:#F5B83D; --st-6:#EC6FB0; --st-7:#34C27A; --st-8:#6B7280;
+
+  /* semánticos */
+  --ok: #22A06B; --warn: #F2A51A; --danger: #E5484D; --info: #3B82F6;
+
+  /* prioridad tareas */
+  --pri-alta: #E5484D; --pri-media: #F2A51A; --pri-baja: #22A06B;
+}
+
+/* ---------- Tema claro ---------- */
+:root, :root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #EEF0F4;
+  --bg-grad: radial-gradient(1200px 700px at 8% -10%, rgba(124,92,255,.14), transparent 60%),
+             radial-gradient(900px 600px at 100% 0%, rgba(249,115,22,.12), transparent 55%),
+             radial-gradient(1000px 700px at 60% 110%, rgba(15,163,160,.12), transparent 60%);
+  --glass: rgba(255,255,255,.62);
+  --glass-strong: rgba(255,255,255,.82);
+  --glass-border: rgba(255,255,255,.75);
+  --glass-inner: inset 0 1px 0 rgba(255,255,255,.9);
+  --card: #FFFFFF;
+  --card-2: #F7F8FA;
+  --line: rgba(17,24,39,.08);
+  --line-soft: rgba(17,24,39,.05);
+  --text: #15181E;
+  --muted: #5F6775;
+  --faint: #9AA1AD;
+  --hover: rgba(17,24,39,.04);
+  --active: rgba(17,24,39,.07);
+  --accent: var(--app-estados);
+  --accent-soft: rgba(59,110,245,.12);
+  --sidebar: rgba(255,255,255,.55);
+  --tip-bg: #15181E; --tip-fg: #fff;
+}
+
+/* ---------- Tema oscuro ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E1014;
+    --bg-grad: radial-gradient(1200px 700px at 8% -10%, rgba(124,92,255,.22), transparent 60%),
+               radial-gradient(900px 600px at 100% 0%, rgba(249,115,22,.16), transparent 55%),
+               radial-gradient(1000px 700px at 60% 110%, rgba(15,163,160,.16), transparent 60%);
+    --glass: rgba(24,27,34,.58);
+    --glass-strong: rgba(24,27,34,.82);
+    --glass-border: rgba(255,255,255,.08);
+    --glass-inner: inset 0 1px 0 rgba(255,255,255,.06);
+    --card: #171A20;
+    --card-2: #1D2129;
+    --line: rgba(255,255,255,.08);
+    --line-soft: rgba(255,255,255,.05);
+    --text: #ECEEF2;
+    --muted: #A2A9B6;
+    --faint: #6B7280;
+    --hover: rgba(255,255,255,.05);
+    --active: rgba(255,255,255,.09);
+    --accent-soft: rgba(59,110,245,.2);
+    --sidebar: rgba(18,20,26,.55);
+    --line-global: #F2F2F2;
+    --line-fabrics: #B9B9B4;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.25);
+    --shadow-md: 0 2px 6px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,.4), 0 28px 64px rgba(0,0,0,.55);
+    --tip-bg: #ECEEF2; --tip-fg: #15181E;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E1014;
+  --bg-grad: radial-gradient(1200px 700px at 8% -10%, rgba(124,92,255,.22), transparent 60%),
+             radial-gradient(900px 600px at 100% 0%, rgba(249,115,22,.16), transparent 55%),
+             radial-gradient(1000px 700px at 60% 110%, rgba(15,163,160,.16), transparent 60%);
+  --glass: rgba(24,27,34,.58);
+  --glass-strong: rgba(24,27,34,.82);
+  --glass-border: rgba(255,255,255,.08);
+  --glass-inner: inset 0 1px 0 rgba(255,255,255,.06);
+  --card: #171A20;
+  --card-2: #1D2129;
+  --line: rgba(255,255,255,.08);
+  --line-soft: rgba(255,255,255,.05);
+  --text: #ECEEF2;
+  --muted: #A2A9B6;
+  --faint: #6B7280;
+  --hover: rgba(255,255,255,.05);
+  --active: rgba(255,255,255,.09);
+  --accent-soft: rgba(59,110,245,.2);
+  --sidebar: rgba(18,20,26,.55);
+  --line-global: #F2F2F2;
+  --line-fabrics: #B9B9B4;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.25);
+  --shadow-md: 0 2px 6px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,.4), 0 28px 64px rgba(0,0,0,.55);
+  --tip-bg: #ECEEF2; --tip-fg: #15181E;
+}
+
+/* acento por app: el body recibe data-app y las vistas heredan --accent */
+[data-app="inicio"]    { --accent: var(--app-inicio);    --accent-soft: rgba(31,41,55,.10); }
+[data-app="marketing"] { --accent: var(--app-marketing); --accent-soft: rgba(124,92,255,.14); }
+[data-app="productos"] { --accent: var(--app-productos); --accent-soft: rgba(15,163,160,.14); }
+[data-app="estados"]   { --accent: var(--app-estados);   --accent-soft: rgba(59,110,245,.14); }
+[data-app="campanas"]  { --accent: var(--app-campanas);  --accent-soft: rgba(249,115,22,.14); }
+:root[data-theme="dark"] [data-app="inicio"] { --accent: #C9CED8; --accent-soft: rgba(201,206,216,.14); }
+
+/* ---------- Más color (referencias Quickit / Duxica) ---------- */
+:root, :root[data-theme="light"] {
+  --bg-grad: radial-gradient(1100px 600px at 0% 0%, rgba(59,110,245,.16), transparent 60%),
+             radial-gradient(900px 600px at 100% 10%, rgba(124,92,255,.16), transparent 55%),
+             radial-gradient(900px 700px at 50% 110%, rgba(45,212,191,.14), transparent 60%);
+  --hero-grad: linear-gradient(120deg, #4F46E5 0%, #7C5CFF 45%, #2DD4BF 100%);
+  --pastel-mint: #CDF5EA; --pastel-peach: #FFD9A8; --pastel-lav: #E4D9FF; --pastel-sky: #D6E6FF; --pastel-rose: #FFD6E7;
+  --pastel-fg: #1E2230;
+}
+:root[data-theme="dark"], :root:not([data-theme="light"]) { }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0E1A;
+    --bg-grad: radial-gradient(1100px 700px at 0% 0%, rgba(59,110,245,.55), transparent 60%),
+               radial-gradient(900px 700px at 100% 0%, rgba(124,92,255,.5), transparent 55%),
+               radial-gradient(1000px 800px at 60% 120%, rgba(45,212,191,.35), transparent 60%);
+    --glass: rgba(14,17,30,.62); --glass-strong: rgba(16,19,32,.78); --sidebar: rgba(12,14,26,.62);
+    --card: #161A2B; --card-2: #1C2136; --line: rgba(255,255,255,.09);
+    --hero-grad: linear-gradient(120deg, #3730A3 0%, #6D4AFF 45%, #14B8A6 100%);
+    --pastel-mint: #9BE7D2; --pastel-peach: #F7C27E; --pastel-lav: #C9B8FF; --pastel-sky: #A9C8FF; --pastel-rose: #F7B3CD;
+    --pastel-fg: #0F1220;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B0E1A;
+  --bg-grad: radial-gradient(1100px 700px at 0% 0%, rgba(59,110,245,.55), transparent 60%),
+             radial-gradient(900px 700px at 100% 0%, rgba(124,92,255,.5), transparent 55%),
+             radial-gradient(1000px 800px at 60% 120%, rgba(45,212,191,.35), transparent 60%);
+  --glass: rgba(14,17,30,.62); --glass-strong: rgba(16,19,32,.78); --sidebar: rgba(12,14,26,.62);
+  --card: #161A2B; --card-2: #1C2136; --line: rgba(255,255,255,.09);
+  --hero-grad: linear-gradient(120deg, #3730A3 0%, #6D4AFF 45%, #14B8A6 100%);
+  --pastel-mint: #9BE7D2; --pastel-peach: #F7C27E; --pastel-lav: #C9B8FF; --pastel-sky: #A9C8FF; --pastel-rose: #F7B3CD;
+  --pastel-fg: #0F1220;
+}
+
+/* Fondos más sobrios (decisión 27 oct: el color vive dentro de cada panel) */
+:root, :root[data-theme="light"] {
+  --bg-grad: radial-gradient(1100px 600px at 0% 0%, rgba(59,110,245,.10), transparent 60%),
+             radial-gradient(900px 600px at 100% 10%, rgba(124,92,255,.09), transparent 55%),
+             radial-gradient(900px 700px at 50% 110%, rgba(45,212,191,.08), transparent 60%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-grad: radial-gradient(1100px 700px at 0% 0%, rgba(59,110,245,.28), transparent 60%),
+               radial-gradient(900px 700px at 100% 0%, rgba(124,92,255,.24), transparent 55%),
+               radial-gradient(1000px 800px at 60% 120%, rgba(45,212,191,.16), transparent 60%);
+  }
+}
+:root[data-theme="dark"] {
+  --bg-grad: radial-gradient(1100px 700px at 0% 0%, rgba(59,110,245,.28), transparent 60%),
+             radial-gradient(900px 700px at 100% 0%, rgba(124,92,255,.24), transparent 55%),
+             radial-gradient(1000px 800px at 60% 120%, rgba(45,212,191,.16), transparent 60%);
+}
+
+/* ============================================================
+   Paleta neón (27 oct): colores vivos, azul rey como principal
+   ============================================================ */
+:root {
+  --app-inicio:    #2F5BFF;
+  --app-marketing: #2F5BFF;   /* azul rey tecnológico (antes morado) */
+  --app-productos: #22E07A;   /* verde neón */
+  --app-estados:   #00C2FF;   /* cian */
+  --app-campanas:  #FF7A1A;   /* naranjo neón */
+  --accent: #2F5BFF;
+  --line-workwear: #FFB020; --line-outdoor: #FF5A1F; --line-corporate: #2F5BFF; --line-clinic: #38BDF8;
+  --st-0:#8A94A6; --st-1:#2F5BFF; --st-2:#A855F7; --st-3:#FF7A1A; --st-4:#00C2FF; --st-5:#FFC21A; --st-6:#FF4D9D; --st-7:#22E07A; --st-8:#64748B;
+  --ok: #22E07A; --warn: #FFC21A; --danger: #FF3B5C; --info: #00C2FF;
+  --pri-alta: #FF3B5C; --pri-media: #FFC21A; --pri-baja: #22E07A;
+}
+[data-app="inicio"]    { --accent: var(--app-inicio); --accent-soft: rgba(47,91,255,.14); }
+[data-app="marketing"] { --accent: var(--app-marketing); --accent-soft: rgba(47,91,255,.14); }
+[data-app="productos"] { --accent: var(--app-productos); --accent-soft: rgba(34,224,122,.16); }
+[data-app="estados"]   { --accent: var(--app-estados); --accent-soft: rgba(0,194,255,.16); }
+[data-app="campanas"]  { --accent: var(--app-campanas); --accent-soft: rgba(255,122,26,.16); }
+:root[data-theme="dark"] [data-app="inicio"] { --accent: #4D78FF; }
+:root[data-theme="dark"] [data-app="productos"] { --accent: #22E07A; }
+:root[data-theme="dark"] [data-app="estados"] { --accent: #00C2FF; }
+:root[data-theme="dark"] [data-app="campanas"] { --accent: #FF7A1A; }
+/* fondo oscuro más negro, como la referencia */
+:root[data-theme="dark"] { --bg: #06080F; --card: #10131C; --card-2: #161A26; --glass: rgba(12,15,24,.66); --glass-strong: rgba(13,16,26,.82); --sidebar: rgba(9,11,19,.7);
+  --bg-grad: radial-gradient(900px 500px at 0% 0%, rgba(47,91,255,.22), transparent 60%), radial-gradient(800px 500px at 100% 0%, rgba(0,194,255,.14), transparent 55%), radial-gradient(900px 600px at 50% 120%, rgba(34,224,122,.10), transparent 60%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #06080F; --card: #10131C; --card-2: #161A26; --glass: rgba(12,15,24,.66); --glass-strong: rgba(13,16,26,.82); --sidebar: rgba(9,11,19,.7);
+  --bg-grad: radial-gradient(900px 500px at 0% 0%, rgba(47,91,255,.22), transparent 60%), radial-gradient(800px 500px at 100% 0%, rgba(0,194,255,.14), transparent 55%), radial-gradient(900px 600px at 50% 120%, rgba(34,224,122,.10), transparent 60%); } }
+
+/* ---------- Modo claro: mismos colores pero más apagados, sin brillo ----------
+   (el oscuro mantiene la paleta neón) */
+:root, :root[data-theme="light"] {
+  --app-marketing: #2B52D6; --app-inicio: #2B52D6; --app-productos: #1DAE66; --app-estados: #0E9BCB; --app-campanas: #E8691A;
+  --line-workwear: #E6A21B; --line-outdoor: #E65A2A; --line-corporate: #2B52D6; --line-clinic: #2F9FD6;
+  --st-0:#8A94A6; --st-1:#2B52D6; --st-2:#8E4AE0; --st-3:#E8691A; --st-4:#0E9BCB; --st-5:#E0A816; --st-6:#E0418A; --st-7:#1DAE66; --st-8:#64748B;
+  --ok: #1DAE66; --warn: #E0A816; --danger: #E03A52; --info: #0E9BCB;
+  --pri-alta: #E03A52; --pri-media: #E0A816; --pri-baja: #1DAE66;
+  --tone: saturate(.78) brightness(.9);   /* se aplica a colores guardados (personas) en claro */
+}
+:root[data-theme="dark"] { --tone: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --tone: none;
+  --app-marketing: #2F5BFF; --app-inicio: #2F5BFF; --app-productos: #22E07A; --app-estados: #00C2FF; --app-campanas: #FF7A1A;
+  --line-workwear: #FFB020; --line-outdoor: #FF5A1F; --line-corporate: #2F5BFF; --line-clinic: #38BDF8;
+  --st-0:#8A94A6; --st-1:#2F5BFF; --st-2:#A855F7; --st-3:#FF7A1A; --st-4:#00C2FF; --st-5:#FFC21A; --st-6:#FF4D9D; --st-7:#22E07A; --st-8:#64748B;
+  --ok: #22E07A; --warn: #FFC21A; --danger: #FF3B5C; --info: #00C2FF; --pri-alta: #FF3B5C; --pri-media: #FFC21A; --pri-baja: #22E07A; } }
+:root[data-theme="dark"] {
+  --app-marketing: #2F5BFF; --app-inicio: #2F5BFF; --app-productos: #22E07A; --app-estados: #00C2FF; --app-campanas: #FF7A1A;
+  --line-workwear: #FFB020; --line-outdoor: #FF5A1F; --line-corporate: #2F5BFF; --line-clinic: #38BDF8;
+  --st-0:#8A94A6; --st-1:#2F5BFF; --st-2:#A855F7; --st-3:#FF7A1A; --st-4:#00C2FF; --st-5:#FFC21A; --st-6:#FF4D9D; --st-7:#22E07A; --st-8:#64748B;
+  --ok: #22E07A; --warn: #FFC21A; --danger: #FF3B5C; --info: #00C2FF; --pri-alta: #FF3B5C; --pri-media: #FFC21A; --pri-baja: #22E07A; }
+
+/* ---------- Modo oscuro (13 nov): fondo gris oscuro y cuadros MÁS oscuros que el fondo, para que se distingan ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171B27;
+    --bg-grad: radial-gradient(1100px 700px at 0% 0%, rgba(59,110,245,.16), transparent 60%),
+               radial-gradient(900px 700px at 100% 0%, rgba(124,92,255,.12), transparent 55%);
+    --glass: rgba(11,14,22,.72); --glass-strong: rgba(11,14,22,.9); --sidebar: rgba(11,14,22,.9);
+    --glass-border: rgba(255,255,255,.07); --glass-inner: inset 0 1px 0 rgba(255,255,255,.04);
+    --card: #0C0F17; --card-2: #121624; --line: rgba(255,255,255,.08); --line-soft: rgba(255,255,255,.05);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171B27;
+  --bg-grad: radial-gradient(1100px 700px at 0% 0%, rgba(59,110,245,.16), transparent 60%),
+             radial-gradient(900px 700px at 100% 0%, rgba(124,92,255,.12), transparent 55%);
+  --glass: rgba(11,14,22,.72); --glass-strong: rgba(11,14,22,.9); --sidebar: rgba(11,14,22,.9);
+  --glass-border: rgba(255,255,255,.07); --glass-inner: inset 0 1px 0 rgba(255,255,255,.04);
+  --card: #0C0F17; --card-2: #121624; --line: rgba(255,255,255,.08); --line-soft: rgba(255,255,255,.05);
+}

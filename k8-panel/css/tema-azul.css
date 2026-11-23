@@ -1,0 +1,66 @@
+/* ============================================================
+   K8 Panel · PRUEBA «Azul vidrio» (23-11-2026)
+   Inspirado en el video de referencia de Vicente: fondo azul muy profundo con brillos
+   difusos de color detrás, y tarjetas translúcidas que dejan ver ese brillo.
+   Va DESPUÉS de skin-noche.css y solo cambia colores y fondos.
+   PARA VOLVER ATRÁS: quitar la línea <link ... tema-azul.css> de index.html. Nada más.
+   ============================================================ */
+:root, :root[data-theme="dark"], :root[data-theme="light"] {
+  --bg: #050A18;
+  --bg-grad:
+    radial-gradient(900px 620px at 18% 8%, rgba(40, 92, 255, .30), transparent 62%),
+    radial-gradient(760px 560px at 88% 22%, rgba(0, 150, 255, .16), transparent 60%),
+    radial-gradient(900px 700px at 55% 105%, rgba(0, 190, 200, .12), transparent 60%),
+    radial-gradient(1200px 900px at 50% 50%, rgba(20, 40, 110, .35), transparent 70%);
+  --card: rgba(16, 30, 72, .55);
+  --card-2: rgba(28, 48, 104, .55);
+  --glass: rgba(16, 30, 72, .55);
+  --glass-strong: rgba(14, 26, 64, .78);
+  --glass-border: rgba(130, 165, 255, .14);
+  --line: rgba(130, 165, 255, .13);
+  --line-soft: rgba(130, 165, 255, .08);
+  --hover: rgba(120, 160, 255, .08);
+  --active: rgba(120, 160, 255, .14);
+  --sidebar: rgba(10, 20, 52, .62);
+  --muted: #A3B1CF;
+  --faint: #6F7EA3;
+  --shadow-md: 0 14px 40px rgba(2, 6, 20, .55);
+  --shadow-lg: 0 28px 70px rgba(2, 6, 20, .65);
+}
+/* el brillo queda fijo detrás mientras se hace scroll, como en el video */
+body { background-color: var(--bg); background-image: var(--bg-grad); background-attachment: fixed; }
+
+/* tarjetas de vidrio: translúcidas, borde azulado fino y un reflejo arriba */
+.card, .ivx-card, .menu-pop, .modal, .search, .icon-btn {
+  background-color: var(--card);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(170, 200, 255, .07), 0 10px 30px rgba(2, 6, 20, .35);
+}
+.card, .ivx-card { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.sidebar, .topbar .search { backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); }
+.sidebar { background: var(--sidebar); border-color: var(--glass-border); box-shadow: inset 0 1px 0 rgba(170, 200, 255, .08); }
+.modal { background-color: rgba(12, 24, 60, .92); }
+.menu-pop { background-color: rgba(12, 24, 60, .95); }
+
+/* tablas y separadores con el tono azul */
+.table th { color: var(--faint); }
+.table td, .table th { border-color: var(--line); }
+
+/* Panel de clientes (antes blanco): vidrio azul como el resto (Vicente 23-11: «el blanco es muy contraste con el fondo») */
+.ivx-light { background: rgba(16, 30, 72, .55); color: var(--text); border: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 rgba(170, 200, 255, .07); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.ivx-seg.dark { background: rgba(6, 14, 38, .65); border-color: var(--glass-border); }
+.ivx-search { background: rgba(6, 14, 38, .6); border-color: var(--glass-border); color: var(--text); }
+.ivx-search::placeholder { color: var(--faint); }
+.ivx-search:focus { border-color: rgba(130, 165, 255, .45); }
+.ivx-row:hover { background: rgba(120, 160, 255, .09); }
+.ivx-row.on { background: rgba(77, 120, 255, .24); color: #fff; box-shadow: inset 0 0 0 1px rgba(130, 165, 255, .32); }
+.ivx-row .ivx-avt, .ivx-row.on .ivx-avt { border-color: transparent; }
+.ivx-row-n span, .ivx-row.on .ivx-row-n span { color: var(--muted); }
+.ivx-chip, .ivx-row.on .ivx-chip { background: rgba(255, 255, 255, .09); color: var(--text); }
+.ivx-chip.warn { background: rgba(255, 194, 26, .16); color: #FFD666; }
+.ivx-det { background: rgba(6, 14, 40, .72); border: 1px solid var(--glass-border); }
+.ivx-det-v .ivx-avt { border-color: transparent; }
+.ivx-dc { background: rgba(60, 95, 190, .22); }
+.ivx-det-grid { background: rgba(60, 95, 190, .14); }
+.ivx-det .muted, .ivx-det-head .xs, .ivx-det-grid span { color: var(--muted) !important; }
+.ivx-light .btn:not(.primary) { background: rgba(255, 255, 255, .07); border-color: var(--glass-border); color: var(--text); }

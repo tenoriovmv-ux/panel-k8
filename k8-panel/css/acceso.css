@@ -1,0 +1,65 @@
+/* ============================================================
+   K8 Panel · Ingreso Lector / Administrador y modo lector (23-11-2026)
+   ============================================================ */
+
+/* ---------- Pantalla de ingreso ---------- */
+.acc { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+.acc-caja { width: 100%; max-width: 720px; text-align: center; animation: acc-in .6s cubic-bezier(.16, 1, .3, 1) both; }
+.acc-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 18px; background: rgba(255, 255, 255, .06); padding: 10px; border: 1px solid var(--glass-border); box-shadow: 0 0 40px rgba(47, 91, 255, .35); }
+.acc h1 { margin: 16px 0 4px; font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.acc-sub { margin: 0 0 26px; color: var(--muted); }
+.acc-ops { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
+.acc-op {
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 8px; padding: 22px; border-radius: 22px; font: inherit; color: inherit;
+  background: var(--card); border: 1px solid var(--glass-border); cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(170, 200, 255, .07), 0 14px 40px rgba(2, 6, 20, .45);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: transform .25s cubic-bezier(.16, 1, .3, 1), border-color .2s, box-shadow .25s;
+  animation: acc-in .6s cubic-bezier(.16, 1, .3, 1) both;
+}
+.acc-op.admin { cursor: default; animation-delay: .08s; }
+.acc-op:hover { border-color: rgba(130, 165, 255, .32); }
+button.acc-op:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(170, 200, 255, .1), 0 20px 50px rgba(2, 6, 20, .55), 0 0 0 1px rgba(47, 91, 255, .25); }
+button.acc-op:active { transform: translateY(0) scale(.99); }
+.acc-op b { font-size: 17px; }
+.acc-op > span:not(.acc-ic):not(.acc-err) { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+.acc-ic { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; background: #2F5BFF; box-shadow: 0 0 22px rgba(47, 91, 255, .55); margin-bottom: 4px; }
+.acc-op.admin .acc-ic { background: #0790C9; box-shadow: 0 0 22px rgba(7, 144, 201, .5); }
+.acc-op em { margin-top: auto; padding-top: 8px; font-style: normal; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: #8FB0FF; }
+.acc-clave { margin-top: auto; padding-top: 8px; display: flex; gap: 8px; }
+.acc-clave input {
+  flex: 1; min-width: 0; height: 40px; padding: 0 14px; border-radius: 12px; font: inherit; color: inherit;
+  background: rgba(5, 10, 24, .55); border: 1px solid var(--glass-border); outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.acc-clave input:focus { border-color: #0790C9; box-shadow: 0 0 0 3px rgba(7, 144, 201, .25); }
+.acc-clave .btn { height: 40px; padding: 0 18px; background: #0790C9; color: #fff; }
+.acc-err { min-height: 18px; font-size: 13px; color: #FF7A85; }
+.acc-op.mal { animation: acc-mal .4s; }
+@keyframes acc-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes acc-mal { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+@media (max-width: 640px) { .acc-ops { grid-template-columns: 1fr; } .acc h1 { font-size: 26px; } }
+@media (prefers-reduced-motion: reduce) { .acc-caja, .acc-op { animation: none; } }
+
+/* ---------- Barra superior en modo lector ---------- */
+.lector-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; white-space: nowrap;
+  font-size: 12.5px; font-weight: 700; color: #BFD0FF; background: rgba(47, 91, 255, .16); border: 1px solid rgba(47, 91, 255, .35);
+}
+@media (max-width: 700px) { .lector-chip { padding: 0 9px; font-size: 0; gap: 0; } .lector-chip svg { width: 15px; height: 15px; } }
+
+/* ---------- Modo lector: se ocultan los botones que crean, editan, borran, suben o actualizan ---------- */
+.lector input[type=file], .lector label:has(input[type=file]), .lector #pf-stage,
+.lector :is(#tk-save, #tk-new, #tk-del, #st-import, #rs-save, #rs-new, #rs-del, #rs-mail, #rg-trash, #rg-save,
+  #pr-sync, #pr-stock, #pr-new, #pr-line, #pf-edit, #pf-edit2, #pf-doc, #pf-mail, #pe-save, #pe-baja,
+  #pd-save, #pd-del, #pd-addc, #ln-save, #inf-pbi, #inf-cargar, #inf-actualizar, #goal-save, #goal-edit,
+  #ev-save, #ev-del, #est-upload, #est-restore, #est-config, #est-correo, #eq-new, #eq-bajas, #dd-up,
+  #dc-save, #cp-save, #cp-new, #cp-new2, #cp-import, #cp-del, #cal-new, #ads-refresh, #web-refresh, #ml-refresh),
+.lector :is([data-dnew], [data-dver], [data-cedit], [data-edit], [data-redit], [data-pedit], [data-ddel], [data-sdel],
+  [data-knew], [data-restore], [data-tmenu], [data-rup], [data-wa-monto]),
+.lector .cp-kw .cp-ok { display: none !important; }
+/* Marcar tareas del checklist y escribir el producto de una campaña: se ven, pero no se pueden cambiar */
+.lector [data-cktoggle], .lector .cp-kw input { pointer-events: none; }
+.lector .cp-kw input { opacity: .75; }
+
+/* ---------- Versión publicada en la web: sin servidor, se ocultan los botones que lo necesitan ---------- */
+.publicado :is(#inf-excel, #inf-cli-xls, #inf-actualizar, #inf-cargar, #inf-pbi, #ads-refresh, #web-refresh, #ml-refresh, #pub-btn) { display: none !important; }

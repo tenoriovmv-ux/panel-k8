@@ -1,0 +1,18 @@
+/* ============================================================
+   Modo lector (23-11-2026): se ocultan los botones que crean, editan, borran, suben o cambian etapas.
+   Los datos igual no se guardan (ver LECTOR en app.js); esto es para que no aparezcan.
+   ============================================================ */
+.lector input[type=file],
+.lector :is(#r-example, #sw-go, #swap-open, #sm-go, #sales-up, #sales-map, #s-add, #rpn-go, #rp-del, #rej-ok, #rd-save, #rd-del,
+  #r-note, #r-newprod, #r-doc, #proj-new, #ph-add, #o-use-k8, #o-save, #o-replace, #o-del, #np-go, #np-add, #mx-go,
+  #floor-fix, #ff-go, #f-save, #del-product, #cfg-save, #cfg-restore, #btn-upload-empty, #btn-upload, #btn-logout),
+.lector :is([data-open-config], [data-start-sample], [data-sample-ok], [data-sample-bad], [data-sample-arrive], [data-add-cycle],
+  [data-upload-for], [data-upload-any], [data-step], [data-repo-count], [data-idates], [data-idates-off],
+  [data-proj-round], [data-proj-ok], [data-proj-del], [data-proj-bad], [data-pitem-excel], [data-pitem-del], [data-pitem-add],
+  [data-ph-del], [data-np-del], [data-hist-del], [data-hist-add], [data-floor-one], [data-fix-cross], [data-ev-del],
+  [data-doc-replace], [data-doc-del], [data-doc-add], [data-del-size], [data-del-sale], [data-del-color], [data-cyc-del],
+  [data-cm-del], [data-add-size], [data-add-color]) { display: none !important; }
+/* Campos dentro de fichas y cajones: se leen, pero no se escriben */
+.lector :is(#drawer-root, .drawer) :is(input:not([type=search]), textarea, select) { pointer-events: none; opacity: .8; }
+/* La etapa de cada fila del Gantt se ve, pero no se puede cambiar */
+.lector select[data-stage-of] { pointer-events: none; }
