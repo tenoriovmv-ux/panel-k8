@@ -159,7 +159,10 @@ function campanasWebTla() {
   const bar = `<div class="card ads-bar" style="margin-bottom:14px;padding:12px 16px"><div class="row" style="gap:10px;min-width:0"><span style="width:9px;height:9px;border-radius:50%;background:${tone};box-shadow:0 0 8px ${tone};flex:none"></span><b style="color:${C};flex:none">Tienda web TLA</b><span class="sm muted" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${T && T.ok ? `Conectada · ${esc(T.store || 'textillasamericas.cl')} · ${fmtInt(orders.length)} pedidos desde ${fmtDate(String(T.since || '').slice(0, 10))} · último pedido el ${fmtDate(ultimo)} · actualizada ${timeAgo(T.at)}` : T && T.error ? 'Error: ' + esc(T.error) : 'Sin conectar'}</span></div>
     </div>`;
   const GA = WEB.dataTla || {};
-  const gaAviso = `<div class="card" style="margin-bottom:14px;padding:14px 16px;border-left:3px solid var(--warn)">${cardHead(ICON.alert(15), 'Falta el acceso al Google Analytics de TLA', 'Para ver visitas, visitantes, minutos en el sitio, productos más vistos, de dónde llegan y clics a WhatsApp, igual que en K8', '', 'var(--warn)')}
+  // Analytics de TLA conectado (24-11) pero todavía sin días con datos: recién empezó a medir
+  const gaAviso = GA.ok ? `<div class="card" style="margin-bottom:14px;padding:14px 16px;border-left:3px solid var(--info)">${cardHead(ICON.clock(15), 'Google Analytics de TLA conectado', 'Empezó a medir el 24 de noviembre de 2026', '', 'var(--info)')}
+    <div class="sm" style="line-height:1.6">El panel ya lee el Analytics de textillasamericas.cl, pero Google todavía no entrega días con datos (tarda unas horas en procesar las primeras visitas). Cuando lleguen, esta página muestra lo mismo que la de K8: visitas, visitantes, minutos en el sitio, páginas y productos más vistos, de dónde llegan y clics a WhatsApp. Se revisa sola cada hora.</div>
+    ${GA.updated_at ? `<div class="xs muted" style="margin-top:8px">Última revisión: ${timeAgo(GA.updated_at)}</div>` : ''}</div>` : `<div class="card" style="margin-bottom:14px;padding:14px 16px;border-left:3px solid var(--warn)">${cardHead(ICON.alert(15), 'Falta el acceso al Google Analytics de TLA', 'Para ver visitas, visitantes, minutos en el sitio, productos más vistos, de dónde llegan y clics a WhatsApp, igual que en K8', '', 'var(--warn)')}
     <div class="sm" style="line-height:1.6">La web de TLA sí tiene Google Analytics (código <b>${esc(GA.measurement_id || 'G-B2Y42P43E7')}</b>), pero la cuenta de Google conectada al panel no tiene permiso para leerlo. Quien administra ese Analytics tiene que entrar a <b>Administrar › Administración de acceso a la propiedad</b> y agregar, con rol <b>Lector</b>, la misma cuenta de Google con la que se conectó el Analytics de K8. Apenas lo haga, el panel lo trae solo (cada hora) y esta página se completa igual que la de K8.</div>
     ${GA.updated_at ? `<div class="xs muted" style="margin-top:8px">Último intento: ${timeAgo(GA.updated_at)}</div>` : ''}</div>`;
   const title = `<div class="page-head"><div><h1>Sitio web · TLA</h1><p>Lo que vende textillasamericas.cl mes a mes: pedidos pagados, lo que queda sin pagar y qué productos se llevan.</p></div><div class="actions"><button class="btn" data-print="Campañas · Sitio web TLA">${ICON.pdf(14)} Informe PDF</button></div></div>`;
@@ -195,7 +198,7 @@ function campanasWebTla() {
 function campanasWeb() {
   const tla = typeof cpTla === 'function' && cpTla();
   const d = tla ? WEB.dataTla : WEB.data; const TI = tla ? WEB.tiendaTla : WEB.tienda;
-  if (tla && !(d && (d.ok || d.stale) && d.months)) return campanasWebTla(); const has = !!(d && (d.ok || d.stale) && d.months);
+  if (tla && !(d && (d.ok || d.stale) && d.months && d.months.length)) return campanasWebTla(); const has = !!(d && (d.ok || d.stale) && d.months);
   const months = has ? d.months : [];
   const avail = months.map(m => m.ym);
   if (!CP.wm || (avail.length && !avail.includes(CP.wm))) CP.wm = avail.includes(ymNow()) ? ymNow() : (avail[avail.length - 1] || ymNow());
