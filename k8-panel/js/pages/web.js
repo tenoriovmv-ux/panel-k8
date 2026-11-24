@@ -23,6 +23,11 @@ async function loadWeb() {
     if (r2.ok) { WEB.tienda = await r2.json(); if (WEB.tienda) { WEB.tienda.orders = asList(WEB.tienda.orders).map(o => ({ ...o, items: asList(o.items) })); } }
   } catch (e) { WEB.tienda = null; }
   CONN.tienda = !!(WEB.tienda && WEB.tienda.orders && WEB.tienda.orders.length);
+  // Tienda web de TLA (textillasamericas.cl): para Sitio web con el selector en TLA
+  try {
+    const r3 = await fetch('data/tienda-tla.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (r3.ok) { WEB.tiendaTla = await r3.json(); if (WEB.tiendaTla) WEB.tiendaTla.orders = asList(WEB.tiendaTla.orders).map(o => ({ ...o, items: asList(o.items) })); }
+  } catch (e) { WEB.tiendaTla = null; }
   return true;
 }
 // Estado de un pedido: pagado, no pagado (abandonó en el pago) o devuelto
@@ -122,8 +127,65 @@ function rankList(rows, { color = WEB.c, max = 8, fmt = fmtInt, total = 0, sub =
 
 const deltaTxt = (now, prev, invert = false) => { if (prev == null || !prev) return ''; const d = (now - prev) / prev; if (Math.abs(d) < 0.03) return '<span class="muted">→ igual</span>'; const up = d > 0; const good = invert ? !up : up; return `<span style="color:${good ? 'var(--ok)' : 'var(--danger)'}">${up ? '↑' : '↓'} ${Math.round(Math.abs(d) * 100)}%</span>`; };
 
+// ---------- Sitio web de TLA (24-11): pedidos reales de textillasamericas.cl (WooCommerce) ----------
+// Google Analytics de TLA todavía no está conectado; se avisa y se muestra lo de la tienda.
+function campanasWebTla() {
+  const T = WEB.tiendaTla; const orders = (T && T.orders ? T.orders : []).filter(o => o.status !== 'trash');
+  const has = orders.length > 0; const C = 'var(--ok)';
+  // Todos los meses desde el primer pedido hasta hoy (también los que no tienen pedidos, para que se note si la tienda se detuvo)
+  const avail = []; const first = orders.reduce((a, o) => (!a || o.date < a) ? o.date : a, '').slice(0, 7);
+  if (first) for (let m = first; m <= ymNow(); m = ymShift(m, 1)) avail.push(m);
+  const ultimo = orders.reduce((a, o) => o.date > a ? o.date : a, '').slice(0, 10);
+  if (!CP.wm || !avail.includes(CP.wm)) CP.wm = ymNow();
+  const ym = CP.wm, pym = ymShift(ym, -1), isNow = ym === ymNow(), dayN = isNow ? Number(todayIso().slice(8, 10)) : 31;
+  const paidOf = xs => xs.filter(o => ORDER_PAID.includes(o.status)), sumT = xs => xs.reduce((a, o) => a + Number(o.total || 0), 0);
+  const ordersM = orders.filter(o => o.date.startsWith(ym));
+  const paidM = paidOf(ordersM), unpaidM = ordersM.filter(o => ORDER_UNPAID.includes(o.status)), refundM = ordersM.filter(o => o.status === 'refunded');
+  const prevM = orders.filter(o => o.date.startsWith(pym) && (!isNow || Number(o.date.slice(8, 10)) <= dayN));
+  const revenue = sumT(paidM), revPrev = sumT(paidOf(prevM)), unpaidAmt = sumT(unpaidM);
+  const cmpLbl = isNow ? `vs mismos días de ${MESES[Number(pym.slice(5)) - 1]}` : `vs ${MESES[Number(pym.slice(5)) - 1]}`;
+  const k = (lbl, val, now, prev, extra) => kpi(lbl, val, prev ? `${deltaTxt(now, prev)} <span class="muted">${cmpLbl}</span>` : `<span class="muted">${extra || (avail.includes(pym) ? `${MESES[Number(pym.slice(5)) - 1]}: ${now ? 'sin ventas' : 'tampoco hubo'}` : 'sin mes anterior')}</span>`);
+  const meses = avail.map(m => { const xs = orders.filter(o => o.date.startsWith(m)); return { ym: m, revenue: sumT(paidOf(xs)), orders: xs.length }; });
+  const dias = waDaysBetween([`${ym}-01`, isNow ? todayIso() : `${ym}-${pad(new Date(Number(ym.slice(0, 4)), Number(ym.slice(5)), 0).getDate())}`]).map(day => ({ date: day, v: sumT(paidM.filter(o => o.date.startsWith(day))) }));
+  const items = groupSum(paidM.flatMap(o => o.items.map(i => ({ name: i.name, qty: i.qty, total: i.total }))), r => r.name, ['qty', 'total']).map(o => ({ name: o.key, v: o.total, q: o.qty })).sort((a, b) => b.v - a.v);
+  const unpaidItems = groupSum(unpaidM.flatMap(o => o.items.map(i => ({ name: i.name, qty: i.qty, total: i.total }))), r => r.name, ['qty', 'total']).map(o => ({ name: o.key, v: o.qty, title: fmtMoney(o.total) })).sort((a, b) => b.v - a.v);
+  const pagos = groupSum(paidM, o => o.payment || 'Sin dato', ['total']).map(o => ({ name: o.key, v: o.total })).sort((a, b) => b.v - a.v);
+  const clientes = new Set(paidM.map(o => o.customer || o.id)).size;
+  const tone = T && T.ok ? 'var(--ok)' : T && T.configured ? 'var(--danger)' : 'var(--faint)';
+  const bar = `<div class="card ads-bar" style="margin-bottom:14px;padding:12px 16px"><div class="row" style="gap:10px;min-width:0"><span style="width:9px;height:9px;border-radius:50%;background:${tone};box-shadow:0 0 8px ${tone};flex:none"></span><b style="color:${C};flex:none">Tienda web TLA</b><span class="sm muted" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${T && T.ok ? `Conectada · ${esc(T.store || 'textillasamericas.cl')} · ${fmtInt(orders.length)} pedidos desde ${fmtDate(String(T.since || '').slice(0, 10))} · último pedido el ${fmtDate(ultimo)} · actualizada ${timeAgo(T.at)}` : T && T.error ? 'Error: ' + esc(T.error) : 'Sin conectar'}</span></div>
+    <div class="xs muted" style="margin-top:6px">Google Analytics de textillasamericas.cl todavía no está conectado: las visitas, de dónde llegan y los clics a WhatsApp aparecerán cuando se dé acceso a la propiedad.</div></div>`;
+  const title = `<div class="page-head"><div><h1>Sitio web · TLA</h1><p>Lo que vende textillasamericas.cl mes a mes: pedidos pagados, lo que queda sin pagar y qué productos se llevan.</p></div><div class="actions"><button class="btn" data-print="Campañas · Sitio web TLA">${ICON.pdf(14)} Informe PDF</button></div></div>`;
+  const monthPick = `<div class="row wrap no-print" style="margin:0 4px 14px;gap:10px">
+    <div class="seg"><button data-wm="${pym}" title="Mes anterior" ${avail.length && !avail.includes(pym) ? 'disabled' : ''}>${ICON.chevL(13)}</button><button class="on" style="min-width:150px">${ymLabel(ym)}</button><button data-wm="${ymShift(ym, 1)}" title="Mes siguiente" ${ymShift(ym, 1) > ymNow() ? 'disabled' : ''}>${ICON.chevR(13)}</button></div>
+    ${!isNow ? `<button class="btn sm" data-wm="${ymNow()}">Este mes</button>` : `<span class="sm muted">en curso · ${dayN} días</span>`}</div>`;
+  if (!has) return `${title}${cpTabs('web')}${bar}<div class="card">${empty('Sin pedidos de la tienda de TLA', 'Cuando el conector traiga los pedidos de WooCommerce aparecerán aquí')}</div>`;
+  const sinPedidos = ultimo && daysBetween(ultimo, todayIso()) > 30 ? `<div class="card" style="margin-bottom:14px;padding:12px 16px;border-left:3px solid var(--warn)"><div class="sm"><b>La tienda de TLA no recibe pedidos desde el ${fmtDate(ultimo)}</b> (hace ${fmtInt(daysBetween(ultimo, todayIso()))} días). Vale la pena revisar que el pago y el carrito de textillasamericas.cl estén funcionando.</div></div>` : '';
+  return `${title}${cpTabs('web')}${bar}${sinPedidos}${monthPick}
+  <div class="grid g4" style="margin-bottom:14px">
+    ${k('Vendido por la web', fmtShort(revenue), revenue, revPrev)}
+    ${k('Pedidos pagados', fmtInt(paidM.length), paidM.length, paidOf(prevM).length)}
+    ${kpi('Ticket promedio', paidM.length ? fmtMoney(revenue / paidM.length) : '—', paidM.length ? `${fmtInt(clientes)} ${clientes === 1 ? 'cliente' : 'clientes'} distintos` : 'sin pedidos pagados')}
+    ${kpi('Sin pagar', fmtInt(unpaidM.length), unpaidM.length ? `${fmtShort(unpaidAmt)} que llegaron al pago y no pagaron${refundM.length ? ` · ${refundM.length} devueltos` : ''}` : 'nadie quedó en el pago')}
+  </div>
+  <div class="grid" style="grid-template-columns:1.4fr 1fr;margin-bottom:14px">
+    <div class="card">${cardHead(ICON.trend(15), 'Vendido por día', `${ymLabel(ym)} · pedidos pagados`, '', C)}${stockChart(dias, { color: C, height: 190, fmt: fmtShort, label: 'vendido' })}</div>
+    <div class="card">${cardHead(ICON.chart(15), 'Mes a mes', 'Vendido por la web cada mes · toca un mes para verlo', '', C)}${monthBars(meses, ym, 'revenue', C, fmtShort)}</div>
+  </div>
+  <div class="grid" style="grid-template-columns:1.4fr 1fr;margin-bottom:14px">
+    <div class="card">${cardHead(ICON.box(15), 'Pedidos del mes', `${fmtInt(ordersM.length)} pedidos · ${fmtInt(paidM.length)} pagados · ${fmtInt(unpaidM.length)} sin pagar`, '', C)}
+      ${ordersM.length ? `<table class="table"><thead><tr><th>Pedido</th><th>Estado</th><th>Productos</th><th class="r">Monto</th></tr></thead><tbody>${[...ordersM].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12).map(o => `<tr><td class="sm"><b>#${o.id}</b><div class="xs muted">${fmtDate(o.date.slice(0, 10))}${o.city ? ' · ' + esc(o.city) : ''}${o.company ? ' · ' + esc(o.company) : ''}</div></td><td>${chip(ORDER_ES[o.status] || o.status, ORDER_PAID.includes(o.status) ? 'var(--ok)' : o.status === 'refunded' ? 'var(--faint)' : 'var(--danger)')}</td><td class="sm muted" style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}">${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}</td><td class="r b">${fmtShort(o.total)}</td></tr>`).join('')}</tbody></table>${ordersM.length > 12 ? `<div class="xs muted">y ${ordersM.length - 12} más</div>` : ''}` : empty('Sin pedidos en el mes')}
+    </div>
+    <div class="card">${cardHead(ICON.shirt(15), 'Lo que más se vendió', 'Productos en pedidos pagados del mes', '', 'var(--app-productos)')}
+      ${rankList(items, { color: 'var(--app-productos)', max: 8, fmt: fmtShort, sub: r => `${fmtInt(r.q)} u` })}
+      ${unpaidItems.length ? `<div style="margin-top:12px"><div class="xs muted b" style="text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Qué dejaron sin pagar</div>${rankList(unpaidItems, { color: 'var(--danger)', max: 5 })}</div>` : ''}
+      ${pagos.length ? `<div style="margin-top:12px"><div class="xs muted b" style="text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Cómo pagan</div>${rankList(pagos, { color: C, max: 4, fmt: fmtShort, total: revenue })}</div>` : ''}
+    </div>
+  </div>`;
+}
+
 // ---------- Página ----------
 function campanasWeb() {
+  if (typeof cpTla === 'function' && cpTla()) return campanasWebTla();
   const d = WEB.data; const has = !!(d && (d.ok || d.stale) && d.months);
   const months = has ? d.months : [];
   const avail = months.map(m => m.ym);

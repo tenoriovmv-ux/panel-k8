@@ -132,7 +132,7 @@ async function adsRefresh(btn) {
   }
   const t0 = Date.now();
   const poll = async () => {
-    await loadAds();
+    await loadAds(); await loadAdsTla();
     for (const f of ['loadWeb', 'loadWa', 'loadMl']) if (typeof window[f] === 'function') { try { await window[f](); } catch (e) { } }
     const now = (ADS.data && ADS.data.updated_at) || '';
     if (now && now !== prev) {
@@ -147,4 +147,38 @@ async function adsRefresh(btn) {
   setTimeout(poll, 4000);
 }
 
-window.addEventListener('load', () => { loadAds().then(ok => { if (ok && typeof render === 'function') render(); }); });
+// ---------- Campañas de TLA (Meta Ads de Deco TLA, data/ads-tla.json) ----------
+// Se guardan solo en memoria (no se mezclan con la lista de campañas de K8 del navegador). Las ve Campañas con el selector K8 / TLA.
+ADS.tla = null; ADS.tlaList = [];
+async function loadAdsTla() {
+  try {
+    const r = await fetch('data/ads-tla.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return false;
+    ADS.tla = await r.json();
+  } catch (e) { return false; }
+  const d = ADS.tla; const dataAt = String(d.updated_at || '').slice(0, 10);
+  ADS.tlaList = asList(d.campaigns).map(x => {
+    const regs = regionsFromKeys(x.regions);
+    return {
+      id: 'tla_' + x.id, ext: x.id, marca: 'tla', name: x.name, type: x.type || 'otro', platform: x.platform || 'meta', regions: regs.length ? regs : [...REGIONS],
+      start: x.start || '', end: x.end || '', state: x.state || 'off', archived: !!x.archived, notes: '',
+      budget: x.budget || 0, spent: x.spent || 0, impressions: x.impressions || 0, reach: x.reach || 0, clicks: x.clicks || 0,
+      messages: x.messages || 0, leads: x.leads || 0, purchases: x.purchases || 0, dataAt, dailyFrom: x.daily_from || '',
+      linkClicks: x.link_clicks || 0, postEngagement: x.post_engagement || 0, results: x.results || 0, resultKey: x.result_key || '', resultLabel: x.result_label || '',
+      daily: asList(x.daily).map(dd => ({ ...dd, linkClicks: dd.link_clicks || 0, postEngagement: dd.post_engagement || 0 })),
+      auto: true, objective: x.objective || '', goal: x.goal || '', url: x.url || '',
+    };
+  });
+  return true;
+}
+// Barra de estado de la cuenta de Meta de TLA
+function adsBarTla() {
+  const s = (ADS.tla && ADS.tla.sources && ADS.tla.sources.meta) || null;
+  let txt, tone;
+  if (!s || !s.configured) { txt = 'Sin conectar'; tone = 'var(--faint)'; }
+  else if (s.ok) { txt = `Conectado · ${s.count} campañas · ${esc(s.account || '')} · actualizado ${timeAgo(s.at)}`; tone = 'var(--ok)'; }
+  else { txt = `Error: ${esc(s.error || 'sin detalle')}`; tone = 'var(--danger)'; }
+  return `<div class="card ads-bar" style="margin-bottom:14px;padding:12px 16px"><div class="row" style="gap:10px;min-width:0"><span style="width:9px;height:9px;border-radius:50%;background:${tone};box-shadow:0 0 8px ${tone};flex:none"></span><b style="color:${PLATFORMS[0].c};flex:none">Meta Ads TLA</b><span class="sm muted" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${txt.replace(/<[^>]+>/g, '')}">${txt}</span></div><div class="xs muted" style="margin-top:6px">TLA no usa Google Ads. Se actualiza solo cada hora, junto con las campañas de K8.</div></div>`;
+}
+
+window.addEventListener('load', () => { Promise.all([loadAds(), loadAdsTla()]).then(([ok, okT]) => { if ((ok || okT) && typeof render === 'function') render(); }); });

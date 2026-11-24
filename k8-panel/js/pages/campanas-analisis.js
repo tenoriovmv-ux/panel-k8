@@ -148,7 +148,7 @@ const capTxt = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 function campanasAnalisis() {
   CP.ascope = CP.ascope || 'on';
-  const base = Store.list('campaigns').filter(c => !c.archived && (!CP.plat || c.platform === CP.plat));
+  const base = cpCamps().filter(c => !c.archived && cpPlatOk(c));
   const withData = base.filter(c => c.auto || c.spent);
   const shown = CP.ascope === 'on' ? withData.filter(c => c.state === 'on') : withData;
   const order = c => (c.state === 'on' ? 0 : 1);
@@ -158,15 +158,15 @@ function campanasAnalisis() {
   const tot7 = on.reduce((a, x) => a + x.a.spent7, 0), totP = on.reduce((a, x) => a + x.a.spentP, 0);
   const soldOn = on.reduce((a, x) => a + x.a.m.sold, 0);
   const best = on.filter(x => x.a.score === 'bien')[0], worst = on.filter(x => x.a.score === 'mal')[0];
-  const connected = CONN.meta || CONN.google;
+  const connected = cpTla() ? !!(ADS.tlaList || []).length : (CONN.meta || CONN.google);
   const short = s => s.length > 42 ? s.slice(0, 40) + '…' : s;
   return `
-  <div class="page-head"><div><h1>Análisis</h1><p>Cómo va cada campaña: tendencia, costo por resultado, ventas, meta de venta y proyección.</p></div><div class="actions"><button class="btn" data-print="Campañas · Análisis">${ICON.pdf(14)} Informe PDF</button></div></div>
+  <div class="page-head"><div><h1>Análisis${cpTla() ? ' · TLA' : ''}</h1><p>Cómo va cada campaña: tendencia, costo por resultado, ventas, meta de venta y proyección.</p></div><div class="actions"><button class="btn" data-print="Campañas · Análisis">${ICON.pdf(14)} Informe PDF</button></div></div>
   ${cpTabs('analisis')}
   ${connected ? '' : `<div class="card" style="margin-bottom:14px;padding:12px 16px;border-left:3px solid var(--warn)"><div class="sm">El análisis necesita el detalle diario de la plataforma. Conecta Meta Ads o Google Ads (pestaña Dashboard › Guía de conexión).</div></div>`}
   <div class="row wrap no-print" style="margin:0 4px 14px">
     <div class="seg"><button class="${CP.ascope === 'on' ? 'on' : ''}" data-ascope="on">Activas</button><button class="${CP.ascope === 'all' ? 'on' : ''}" data-ascope="all">Todas</button></div>
-    <div class="seg"><button class="${!CP.plat ? 'on' : ''}" data-cplat="">Ambas</button>${PLATFORMS.map(p => `<button class="${CP.plat === p.id ? 'on' : ''}" data-cplat="${p.id}">${p.name}</button>`).join('')}</div>
+    ${cpPlatSeg()}
     <span class="spacer"></span><span class="sm muted">${on.length} activas · ${withData.length} con datos</span></div>
   <div class="grid g5" style="margin-bottom:14px">
     ${kpi('Gastado en activas', fmtShort(totOn), `${on.length} ${on.length === 1 ? 'campaña activa' : 'campañas activas'} · total desde que partieron`)}

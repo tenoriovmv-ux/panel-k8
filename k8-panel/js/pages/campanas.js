@@ -9,17 +9,30 @@ const CP = Store.read('cp_ui', {}) || {};
 CP.period = CP.period || 'mes'; CP.from = CP.from || ''; CP.to = CP.to || ''; CP.plat = CP.plat || ''; CP.zone = CP.zone || ''; CP.lstate = CP.lstate || 'all'; CP.ltype = CP.ltype || '';
 const cpSave = () => Store.write('cp_ui', CP);
 
-const cpTabs = on => `<div class="tabs no-print">${[['dashboard', 'Dashboard'], ['analisis', 'Análisis'], ['lista', 'Todas las campañas'], ['zonas', 'Por zona'], ['web', 'Sitio web'], ['whatsapp', 'WhatsApp'], ['mercadolibre', 'Mercado Libre']].map(([k, l]) => `<button class="${on === k ? 'on' : ''}" data-go="campanas/${k}">${l}</button>`).join('')}</div>`;
+// Marca (24-11, Vicente): Campañas y Sitio web se ven por separado para K8 y para TLA (WhatsApp y Mercado Libre son solo de K8)
+CP.marca = CP.marca === 'tla' ? 'tla' : 'k8';
+const CP_MARCAS = {
+  k8: { nombre: 'K8 Chile', logo: 'assets/marca-k8.png', alcance: 'Meta Ads y Google Ads · k8chile.cl' },
+  tla: { nombre: 'Textil Las Américas', logo: 'assets/marca-tla.png', alcance: 'Meta Ads de Deco TLA · textillasamericas.cl' },
+};
+const cpTla = () => CP.marca === 'tla';
+const cpCamps = () => cpTla() ? (ADS.tlaList || []) : Store.list('campaigns');
+const cpPlats = () => cpTla() ? PLATFORMS.filter(p => p.id === 'meta') : PLATFORMS;
+const cpPlatOk = c => cpTla() || !CP.plat || c.platform === CP.plat;
+const cpPlatSeg = () => cpTla() ? '' : `<div class="seg"><button class="${!CP.plat ? 'on' : ''}" data-cplat="">Ambas</button>${PLATFORMS.map(p => `<button class="${CP.plat === p.id ? 'on' : ''}" data-cplat="${p.id}">${p.name}</button>`).join('')}</div>`;
+const cpMarcas = () => `<div class="ivx-marcas no-print" role="tablist">${Object.entries(CP_MARCAS).map(([k, m]) => `<button class="ivx-marca${CP.marca === k ? ' on' : ''}" data-cpmarca="${k}" role="tab" aria-selected="${CP.marca === k}"><img src="${m.logo}" alt=""><span><b>${esc(m.nombre)}</b><small>${esc(m.alcance)}</small></span></button>`).join('')}</div>`;
+
+const cpTabs = on => `${['dashboard', 'analisis', 'lista', 'zonas', 'web'].includes(on) ? cpMarcas() : ''}<div class="tabs no-print">${[['dashboard', 'Dashboard'], ['analisis', 'Análisis'], ['lista', 'Todas las campañas'], ['zonas', 'Por zona'], ['web', 'Sitio web'], ['whatsapp', 'WhatsApp'], ['mercadolibre', 'Mercado Libre']].map(([k, l]) => `<button class="${on === k ? 'on' : ''}" data-go="campanas/${k}">${l}</button>`).join('')}</div>`;
 // Estado de las fuentes (Meta Ads / Google Ads): lo arma js/ads.js con lo que dejó el conector.
-const connBanner = () => adsBar();
+const connBanner = () => cpTla() ? adsBarTla() : adsBar();
 const autoChip = c => `<span class="chip" title="Datos traídos de ${PLATFORMS.find(p => p.id === c.platform)?.name || 'la plataforma'}${c.dataAt ? ` · al ${fmtDate(c.dataAt)}` : ''}">${ICON.zap(11)} auto</span>`;
-const cpFilter = c => (!CP.plat || c.platform === CP.plat) && (!CP.zone || (CP.zone === 'all' ? c.regions.length === REGIONS.length : ZONES.find(z => z.id === CP.zone).regions.some(r => c.regions.includes(r))));
+const cpFilter = c => cpPlatOk(c) && (!CP.zone || (CP.zone === 'all' ? c.regions.length === REGIONS.length : ZONES.find(z => z.id === CP.zone).regions.some(r => c.regions.includes(r))));
 const paceTxt = c => { if (!c.budget || c.state !== 'on') return ''; const days = daysBetween(c.start, todayIso()) + 1; const exp = c.budget * Math.max(1, days); return `${fmtShort(c.spent || 0)} de ${fmtShort(exp)} esperados (${days} d × ${fmtShort(c.budget)})`; };
 
 // ---------- Dashboard ----------
 function campanasDashboard() {
   const range = periodRange(CP.period, CP.from, CP.to);
-  const all = Store.list('campaigns').filter(c => !c.archived);
+  const all = cpCamps().filter(c => !c.archived);
   const camps = all.filter(c => overlaps(c, range) && cpFilter(c));
   const active = camps.filter(c => c.state === 'on');
   // Con datos de la plataforma (detalle diario) se suma solo lo del período; si no, el total anotado.
@@ -27,18 +40,18 @@ function campanasDashboard() {
   const sum = k => camps.reduce((a, c) => a + sp(c, k), 0);
   const spent = sum('spent'), msgs = sum('messages'), imp = sum('impressions'), reach = sum('reach');
   const mets = camps.map(c => ({ c, m: campMetrics(c, range) }));
-  const byPlat = PLATFORMS.map(p => { const xs = camps.filter(c => c.platform === p.id); return { p, n: xs.length, on: xs.filter(c => c.state === 'on').length, spent: xs.reduce((a, c) => a + sp(c, 'spent'), 0), msgs: xs.reduce((a, c) => a + sp(c, 'messages'), 0), imp: xs.reduce((a, c) => a + sp(c, 'impressions'), 0) }; });
+  const byPlat = cpPlats().map(p => { const xs = camps.filter(c => c.platform === p.id); return { p, n: xs.length, on: xs.filter(c => c.state === 'on').length, spent: xs.reduce((a, c) => a + sp(c, 'spent'), 0), msgs: xs.reduce((a, c) => a + sp(c, 'messages'), 0), imp: xs.reduce((a, c) => a + sp(c, 'impressions'), 0) }; });
   const byType = CAMPAIGN_TYPES.map(tp => { const xs = camps.filter(c => c.type === tp.id); return { tp, n: xs.length, on: xs.filter(c => c.state === 'on').length, spent: xs.reduce((a, c) => a + sp(c, 'spent'), 0), msgs: xs.reduce((a, c) => a + sp(c, 'messages'), 0) }; }).filter(x => x.n);
   const maxSpent = Math.max(1, ...byType.map(x => x.spent));
   const byZone = ZONES.map(z => { const xs = camps.filter(c => z.regions.some(r => c.regions.includes(r))); const sp2 = xs.reduce((a, c) => a + sp(c, 'spent'), 0), mg = xs.reduce((a, c) => a + sp(c, 'messages'), 0); const so = xs.reduce((a, c) => a + campMetrics(c, range).sold, 0); return { z, n: xs.length, sp: sp2, mg, so, roas: sp2 ? so / sp2 : null }; });
   const regCount = r => camps.filter(c => c.regions.includes(r)).length; const maxReg = Math.max(1, ...REGIONS.map(regCount));
   const topSpend = [...camps].map(c => ({ ...c, spentP: sp(c, 'spent') })).sort((a, b) => b.spentP - a.spentP).slice(0, 6); const maxC = Math.max(1, ...topSpend.map(c => c.spentP));
   return `
-  <div class="page-head"><div><h1>Campañas</h1><p>Lo esencial de Meta Ads y Google Ads, en un solo lugar y fácil de leer.</p></div><div class="actions"><button class="btn" data-print="Campañas · Dashboard">${ICON.pdf(14)} Informe PDF</button><button class="btn primary" id="cp-new2">${ICON.plus(14)} Campaña</button></div></div>
+  <div class="page-head"><div><h1>Campañas${cpTla() ? ' · TLA' : ''}</h1><p>${cpTla() ? 'Lo esencial de las campañas de Meta Ads de Textil Las Américas, fácil de leer.' : 'Lo esencial de Meta Ads y Google Ads, en un solo lugar y fácil de leer.'}</p></div><div class="actions"><button class="btn" data-print="Campañas · Dashboard">${ICON.pdf(14)} Informe PDF</button>${cpTla() ? '' : `<button class="btn primary" id="cp-new2">${ICON.plus(14)} Campaña</button>`}</div></div>
   ${cpTabs('dashboard')}
   ${connBanner()}
   <div class="row wrap no-print" style="margin:0 4px 14px">${periodBar(CP.period, CP.from, CP.to, 'c')}<span class="spacer"></span>
-    <div class="seg"><button class="${!CP.plat ? 'on' : ''}" data-cplat="">Ambas</button>${PLATFORMS.map(p => `<button class="${CP.plat === p.id ? 'on' : ''}" data-cplat="${p.id}">${p.name}</button>`).join('')}</div>
+    ${cpPlatSeg()}
     <select class="select" id="cp-zone" style="width:150px"><option value="">Todas las zonas</option><option value="all" ${CP.zone === 'all' ? 'selected' : ''}>Todo Chile</option>${ZONES.map(z => `<option value="${z.id}" ${CP.zone === z.id ? 'selected' : ''}>${z.name}</option>`).join('')}</select></div>
   <div class="grid g6" style="margin-bottom:14px">
     ${kpi('Activas', active.length, `de ${camps.length} en el período`)}
@@ -56,8 +69,8 @@ function campanasDashboard() {
       ${byType.length ? byType.sort((a, b) => b.spent - a.spent).map(x => `<div style="margin-bottom:10px"><div class="row sm"><span class="chip c" style="--c:${x.tp.c}"><i></i>${x.tp.name}</span><span class="muted">${x.n} ${x.n === 1 ? 'campaña' : 'campañas'}${x.on ? ` · ${x.on} activa${x.on > 1 ? 's' : ''}` : ''}</span><span class="spacer"></span><b>${fmtShort(x.spent)}</b><span class="muted" style="width:70px;text-align:right">${fmtInt(x.msgs)} msj</span></div><div class="bar thin" style="--c:${x.tp.c};margin-top:4px"><i style="width:${x.spent / maxSpent * 100}%"></i></div></div>`).join('') : empty('Sin campañas en el período')}
     </div>
   </div>
-  <div class="grid g3" style="margin-bottom:14px">
-    ${byPlat.map(x => `<div class="card">${cardHead(ICON.zap(15), x.p.name, (x.p.id === 'meta' ? CONN.meta : CONN.google) ? 'Conectado · datos de la plataforma' : 'Sin conectar · datos manuales', '', x.p.c)}
+  <div class="grid ${cpTla() ? 'g2' : 'g3'}" style="margin-bottom:14px">
+    ${byPlat.map(x => `<div class="card">${cardHead(ICON.zap(15), x.p.name, (cpTla() ? !!(ADS.tlaList || []).length : x.p.id === 'meta' ? CONN.meta : CONN.google) ? 'Conectado · datos de la plataforma' : 'Sin conectar · datos manuales', '', x.p.c)}
       <div class="grid g2" style="gap:8px">${[['Campañas', `${x.on} <span class="sm muted">/ ${x.n}</span>`], ['Gasto', fmtShort(x.spent)], ['Mensajes', fmtInt(x.msgs)], ['Costo/msj', x.msgs ? fmtMoney(x.spent / x.msgs) : '—']].map(([l, v]) => `<div class="card flat" style="padding:10px 12px"><div class="xs muted b" style="text-transform:uppercase;letter-spacing:.06em">${l}</div><div class="num" style="font-size:20px">${v}</div></div>`).join('')}</div>
     </div>`).join('')}
     <div class="card">${cardHead(ICON.trend(15), 'Mayor gasto', 'Campañas que más invierten en el período', '', 'var(--app-campanas)')}
@@ -78,14 +91,14 @@ function campanasDashboard() {
 
 // ---------- Lista ----------
 function campanasLista() {
-  const all = Store.list('campaigns');
+  const all = cpCamps();
   const rows = all.filter(c => cpFilter(c) && (CP.lstate === 'all' ? !c.archived : CP.lstate === 'arch' ? c.archived : c.state === CP.lstate && !c.archived) && (!CP.ltype || c.type === CP.ltype)).sort((a, b) => (b.state === 'on') - (a.state === 'on') || (b.start || '').localeCompare(a.start || ''));
   return `
-  <div class="page-head"><div><h1>Todas las campañas</h1><p>Cada una con su objetivo, plataforma, zona y resultados.</p></div><div class="actions"><button class="btn" data-print="Campañas · Lista">${ICON.pdf(14)} Informe PDF</button><button class="btn" id="cp-csv">${ICON.download(14)} Excel</button><button class="btn primary" id="cp-new2">${ICON.plus(14)} Campaña</button></div></div>
+  <div class="page-head"><div><h1>Todas las campañas${cpTla() ? ' · TLA' : ''}</h1><p>Cada una con su objetivo, plataforma, zona y resultados.</p></div><div class="actions"><button class="btn" data-print="Campañas · Lista">${ICON.pdf(14)} Informe PDF</button><button class="btn" id="cp-csv">${ICON.download(14)} Excel</button>${cpTla() ? '' : `<button class="btn primary" id="cp-new2">${ICON.plus(14)} Campaña</button>`}</div></div>
   ${cpTabs('lista')}
   <div class="row wrap no-print" style="margin:0 4px 14px">
     <div class="seg">${[['all', 'Todas'], ['on', 'Activas'], ['draft', 'Borradores'], ['off', 'Desactivadas'], ['arch', 'Archivadas']].map(([k, l]) => `<button class="${CP.lstate === k ? 'on' : ''}" data-clstate="${k}">${l}</button>`).join('')}</div>
-    <div class="seg"><button class="${!CP.plat ? 'on' : ''}" data-cplat="">Ambas</button>${PLATFORMS.map(p => `<button class="${CP.plat === p.id ? 'on' : ''}" data-cplat="${p.id}">${p.name}</button>`).join('')}</div>
+    ${cpPlatSeg()}
     <select class="select" id="cp-ltype" style="width:190px"><option value="">Todos los objetivos</option>${CAMPAIGN_TYPES.map(t => `<option value="${t.id}" ${CP.ltype === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}</select>
     <select class="select" id="cp-zone" style="width:150px"><option value="">Todas las zonas</option><option value="all" ${CP.zone === 'all' ? 'selected' : ''}>Todo Chile</option>${ZONES.map(z => `<option value="${z.id}" ${CP.zone === z.id ? 'selected' : ''}>${z.name}</option>`).join('')}</select>
     <span class="spacer"></span><span class="sm muted">${rows.length} campañas</span></div>
@@ -97,15 +110,15 @@ function campanasLista() {
 // ---------- Por zona ----------
 function campanasZonas() {
   const range = periodRange(CP.period, CP.from, CP.to);
-  const camps = Store.list('campaigns').filter(c => !c.archived && overlaps(c, range) && (!CP.plat || c.platform === CP.plat));
+  const camps = cpCamps().filter(c => !c.archived && overlaps(c, range) && cpPlatOk(c));
   const regStats = REGIONS.map(r => { const xs = camps.filter(c => c.regions.includes(r)); const sp = xs.reduce((a, c) => a + adsIn(c, 'spent', range), 0), mg = xs.reduce((a, c) => a + adsIn(c, 'messages', range), 0), so = xs.reduce((a, c) => a + campMetrics(c, range).sold, 0); return { r, z: zoneOfRegion(r), n: xs.length, on: xs.filter(c => c.state === 'on').length, sp, mg, so, roas: sp ? so / sp : null, types: [...new Set(xs.map(c => c.type))] }; });
   const maxN = Math.max(1, ...regStats.map(x => x.n));
   const sel = CP.zone && CP.zone !== 'all' ? ZONES.find(z => z.id === CP.zone) : null;
   const shown = sel ? regStats.filter(x => x.z === sel) : regStats;
   return `
-  <div class="page-head"><div><h1>Por zona</h1><p>Dónde se están haciendo campañas y cómo rinden por región.</p></div><div class="actions"><button class="btn" data-print="Campañas · Por zona">${ICON.pdf(14)} Informe PDF</button></div></div>
+  <div class="page-head"><div><h1>Por zona${cpTla() ? ' · TLA' : ''}</h1><p>Dónde se están haciendo campañas y cómo rinden por región.</p></div><div class="actions"><button class="btn" data-print="Campañas · Por zona">${ICON.pdf(14)} Informe PDF</button></div></div>
   ${cpTabs('zonas')}
-  <div class="row wrap no-print" style="margin:0 4px 14px">${periodBar(CP.period, CP.from, CP.to, 'c')}<span class="spacer"></span><div class="seg"><button class="${!CP.plat ? 'on' : ''}" data-cplat="">Ambas</button>${PLATFORMS.map(p => `<button class="${CP.plat === p.id ? 'on' : ''}" data-cplat="${p.id}">${p.name}</button>`).join('')}</div></div>
+  <div class="row wrap no-print" style="margin:0 4px 14px">${periodBar(CP.period, CP.from, CP.to, 'c')}<span class="spacer"></span>${cpPlatSeg()}</div>
   <div class="grid" style="grid-template-columns:260px 1fr;align-items:start">
     <div class="card"><div class="chips" style="justify-content:center;margin-bottom:10px"><button class="chip-btn ${!sel ? 'on' : ''}" data-czone="">Todo Chile</button>${ZONES.map(z => `<button class="chip-btn ${CP.zone === z.id ? 'on' : ''}" data-czone="${z.id}">${z.name.replace('Zona ', '')}</button>`).join('')}</div>
       ${chileMapSvg(r => { const x = regStats.find(s => s.r === r); const dim = sel && x.z !== sel; return x.n && !dim ? { fill: `color-mix(in srgb, var(--app-campanas) ${30 + 70 * x.n / maxN}%, var(--line))`, title: `${x.n} campañas` } : {}; }, { w: 200, h: 420 })}
@@ -125,19 +138,21 @@ function bindCampanas(el) {
   $$('[data-cperiod]', el).forEach(b => b.onclick = () => { CP.period = b.dataset.cperiod; cpSave(); render(); });
   $$('[data-cfrom]', el).forEach(i => i.onchange = e => { CP.from = e.target.value; cpSave(); render(); });
   $$('[data-cto]', el).forEach(i => i.onchange = e => { CP.to = e.target.value; cpSave(); render(); });
+  $$('[data-cpmarca]', el).forEach(b => b.onclick = () => { CP.marca = b.dataset.cpmarca; cpSave(); render(); });
   $$('[data-cplat]', el).forEach(b => b.onclick = () => { CP.plat = b.dataset.cplat; cpSave(); render(); });
   $$('[data-czone]', el).forEach(b => b.onclick = () => { CP.zone = b.dataset.czone; cpSave(); render(); });
   $$('[data-clstate]', el).forEach(b => b.onclick = () => { CP.lstate = b.dataset.clstate; cpSave(); render(); });
   $$('[data-ascope]', el).forEach(b => b.onclick = () => { CP.ascope = b.dataset.ascope; cpSave(); render(); });
   const z = $('#cp-zone', el); if (z) z.onchange = e => { CP.zone = e.target.value; cpSave(); render(); };
   const lt = $('#cp-ltype', el); if (lt) lt.onchange = e => { CP.ltype = e.target.value; cpSave(); render(); };
-  $$('[data-cedit2]', el).forEach(b => b.onclick = () => campaignModal(Store.list('campaigns').find(c => c.id === b.dataset.cedit2)));
+  // Las campañas de TLA no se editan en el panel: el administrador las abre en Meta Ads
+  $$('[data-cedit2]', el).forEach(b => b.onclick = () => { const c = cpCamps().find(x => x.id === b.dataset.cedit2); if (!c) return; if (c.marca === 'tla') { if (c.url && !Acceso.lector() && !window.K8_PUBLICADO) window.open(c.url, '_blank', 'noopener'); return; } campaignModal(c); });
   const n = $('#cp-new2', el); if (n) n.onclick = () => campaignModal(null);
   const rf = $('#ads-refresh', el); if (rf) rf.onclick = () => adsRefresh(rf);
   const csv = $('#cp-csv', el); if (csv) csv.onclick = () => {
-    const rows = Store.list('campaigns').map(c => [c.name, ctypeOf(c.type).name, PLATFORMS.find(p => p.id === c.platform)?.name, zoneLabel(c.regions), c.regions.join(' / '), c.state === 'on' ? 'Activa' : c.state === 'draft' ? 'Borrador' : 'Desactivada', c.start, c.end, c.budget, c.spent, c.impressions, c.reach, c.messages, c.notes]);
+    const rows = cpCamps().map(c => [c.name, ctypeOf(c.type).name, PLATFORMS.find(p => p.id === c.platform)?.name, zoneLabel(c.regions), c.regions.join(' / '), c.state === 'on' ? 'Activa' : c.state === 'draft' ? 'Borrador' : 'Desactivada', c.start, c.end, c.budget, c.spent, c.impressions, c.reach, c.messages, c.notes]);
     const out = [['Campaña', 'Objetivo', 'Plataforma', 'Zona', 'Regiones', 'Estado', 'Inicio', 'Término', 'Presupuesto diario', 'Gastado', 'Impresiones', 'Alcance', 'Mensajes', 'Notas'], ...rows].map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + out], { type: 'text/csv;charset=utf-8' })); a.download = `K8_CAMPANAS_${todayIso()}.csv`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + out], { type: 'text/csv;charset=utf-8' })); a.download = `${cpTla() ? 'TLA' : 'K8'}_CAMPANAS_${todayIso()}.csv`; a.click();
   };
 }
 
