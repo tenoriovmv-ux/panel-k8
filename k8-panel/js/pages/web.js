@@ -198,7 +198,9 @@ function campanasWebTla() {
 function campanasWeb() {
   const tla = typeof cpTla === 'function' && cpTla();
   const d = tla ? WEB.dataTla : WEB.data; const TI = tla ? WEB.tiendaTla : WEB.tienda;
-  if (tla && !(d && (d.ok || d.stale) && d.months && d.months.length)) return campanasWebTla(); const has = !!(d && (d.ok || d.stale) && d.months);
+  // TLA: con el Analytics conectado se muestran los mismos campos que K8 (aunque aún no haya días con datos); sin conexión, solo la tienda
+  if (tla && !(d && (d.ok || d.stale))) return campanasWebTla(); const has = !!(d && (d.ok || d.stale) && d.months);
+  const tlaAviso = tla && !(d.months || []).length ? `<div class="card" style="margin-bottom:14px;padding:12px 16px;border-left:3px solid var(--info)"><div class="sm"><b>Google Analytics de TLA conectado.</b> Empezó a medir el 24 de noviembre de 2026 y Google tarda unas horas en entregar las primeras visitas: mientras tanto los campos salen en cero. Se completan solos (el panel revisa cada hora).</div></div>` : '';
   const months = has ? d.months : [];
   const avail = months.map(m => m.ym);
   if (!CP.wm || (avail.length && !avail.includes(CP.wm))) CP.wm = avail.includes(ymNow()) ? ymNow() : (avail[avail.length - 1] || ymNow());
@@ -262,7 +264,7 @@ function campanasWeb() {
   const monthPick = `<div class="row wrap no-print" style="margin:0 4px 14px;gap:10px">
     <div class="seg"><button data-wm="${ymShift(ym, -1)}" title="Mes anterior" ${avail.length && !avail.includes(ymShift(ym, -1)) ? 'disabled' : ''}>${ICON.chevL(13)}</button><button class="on" style="min-width:150px">${ymLabel(ym)}</button><button data-wm="${ymShift(ym, 1)}" title="Mes siguiente" ${ymShift(ym, 1) > ymNow() ? 'disabled' : ''}>${ICON.chevR(13)}</button></div>
     ${!isNow ? `<button class="btn sm" data-wm="${ymNow()}">Este mes</button>` : `<span class="sm muted">en curso · ${dayN} días</span>`}
-    <span class="spacer"></span><span class="sm muted">${has ? `${months.length} meses de historia · desde ${ymLabel(months[0].ym).toLowerCase()}` : ''}</span></div>`;
+    <span class="spacer"></span><span class="sm muted">${has && months.length ? `${months.length} meses de historia · desde ${ymLabel(months[0].ym).toLowerCase()}` : ''}</span></div>`;
 
   if (!has) {
     const err = d && d.error ? esc(d.error) : '';
@@ -279,7 +281,7 @@ function campanasWeb() {
     </div>`;
   }
 
-  return `${title}${cpTabs('web')}${webBar(d)}${monthPick}
+  return `${title}${cpTabs('web')}${webBar(d)}${tlaAviso}${monthPick}
   <div class="grid g4" style="margin-bottom:14px">
     ${k('Visitas', fmtInt(sessions), sessions, cmp('sessions'))}
     ${k('Visitantes', fmtInt(users), users, cmp('users'))}
