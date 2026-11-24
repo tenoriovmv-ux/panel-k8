@@ -23,6 +23,11 @@ async function loadWeb() {
     if (r2.ok) { WEB.tienda = await r2.json(); if (WEB.tienda) { WEB.tienda.orders = asList(WEB.tienda.orders).map(o => ({ ...o, items: asList(o.items) })); } }
   } catch (e) { WEB.tienda = null; }
   CONN.tienda = !!(WEB.tienda && WEB.tienda.orders && WEB.tienda.orders.length);
+  // Analytics de TLA (textillasamericas.cl): data/web-tla.json, mismo formato que web.json
+  try {
+    const r4 = await fetch('data/web-tla.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (r4.ok) { WEB.dataTla = await r4.json(); if (WEB.dataTla && WEB.dataTla.ok !== undefined) for (const k of ['months', 'daily', 'pages', 'landing', 'channels', 'sources', 'devices', 'regions', 'cities', 'items', 'wa', 'events', 'events_daily']) if (WEB.dataTla[k] !== undefined) WEB.dataTla[k] = asList(WEB.dataTla[k]); }
+  } catch (e) { WEB.dataTla = null; }
   // Tienda web de TLA (textillasamericas.cl): para Sitio web con el selector en TLA
   try {
     const r3 = await fetch('data/tienda-tla.json?ts=' + Date.now(), { cache: 'no-store' });
@@ -50,7 +55,7 @@ function groupSum(rows, keyOf, mets) {
   return [...m.values()];
 }
 // Título de página sin la coletilla del sitio ("… | K8 Chile").
-const cleanTitle = (t, path) => { let s = String(t || '').split(/\s[|–-]\s(?=[^|–-]*K8)/)[0].trim(); if (!s || /^k8 chile$/i.test(s)) s = path === '/' ? 'Portada' : String(path || ''); return s; };
+const cleanTitle = (t, path) => { let s = String(t || '').split(/\s[|–-]\s(?=[^|–-]*(K8|Textil|TLA))/)[0].trim(); if (!s || /^(k8 chile|textil las am[eé]ricas)$/i.test(s)) s = path === '/' ? 'Portada' : String(path || ''); return s; };
 const CHANNEL_ES = { 'Organic Search': 'Búsqueda en Google', 'Direct': 'Directo (escriben la dirección)', 'Organic Social': 'Redes sociales', 'Paid Social': 'Anuncios en Meta', 'Paid Search': 'Anuncios en Google', 'Cross-network': 'Anuncios Google (varias redes)', 'Referral': 'Desde otros sitios', 'Email': 'Correo', 'Unassigned': 'Sin clasificar', 'Organic Shopping': 'Google Shopping', 'Paid Shopping': 'Anuncios Shopping', 'Display': 'Banners', 'Organic Video': 'Video (YouTube)', 'Paid Video': 'Anuncios en video', 'Affiliates': 'Afiliados', 'SMS': 'SMS', 'Mobile Push Notifications': 'Notificaciones', 'Audio': 'Audio', 'Paid Other': 'Otros anuncios', 'AI Assistant': 'Asistentes de IA (ChatGPT y otros)' };
 const channelEs = n => CHANNEL_ES[n] || n || 'Sin clasificar';
 const DEVICE_ES = { mobile: 'Celular', desktop: 'Computador', tablet: 'Tablet', 'smart tv': 'Smart TV' };
@@ -63,8 +68,7 @@ function gaRegion(name) {
 }
 
 // ---------- Barra de estado de Analytics ----------
-function webBar() {
-  const d = WEB.data;
+function webBar(d = WEB.data) {
   let txt, tone;
   if (!d || !d.configured) { txt = 'Sin conectar · falta autorizar Google con el permiso de Analytics'; tone = 'var(--faint)'; }
   else if (d.ok) { const pn = d.property?.name || ''; txt = `Conectado · ${esc(pn && pn !== d.site ? `${pn} · ${d.site || ''}` : (d.site || pn || 'Google Analytics'))} · actualizado ${timeAgo(d.at)}`; tone = 'var(--ok)'; }
@@ -153,14 +157,18 @@ function campanasWebTla() {
   const clientes = new Set(paidM.map(o => o.customer || o.id)).size;
   const tone = T && T.ok ? 'var(--ok)' : T && T.configured ? 'var(--danger)' : 'var(--faint)';
   const bar = `<div class="card ads-bar" style="margin-bottom:14px;padding:12px 16px"><div class="row" style="gap:10px;min-width:0"><span style="width:9px;height:9px;border-radius:50%;background:${tone};box-shadow:0 0 8px ${tone};flex:none"></span><b style="color:${C};flex:none">Tienda web TLA</b><span class="sm muted" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${T && T.ok ? `Conectada · ${esc(T.store || 'textillasamericas.cl')} · ${fmtInt(orders.length)} pedidos desde ${fmtDate(String(T.since || '').slice(0, 10))} · último pedido el ${fmtDate(ultimo)} · actualizada ${timeAgo(T.at)}` : T && T.error ? 'Error: ' + esc(T.error) : 'Sin conectar'}</span></div>
-    <div class="xs muted" style="margin-top:6px">Google Analytics de textillasamericas.cl todavía no está conectado: las visitas, de dónde llegan y los clics a WhatsApp aparecerán cuando se dé acceso a la propiedad.</div></div>`;
+    </div>`;
+  const GA = WEB.dataTla || {};
+  const gaAviso = `<div class="card" style="margin-bottom:14px;padding:14px 16px;border-left:3px solid var(--warn)">${cardHead(ICON.alert(15), 'Falta el acceso al Google Analytics de TLA', 'Para ver visitas, visitantes, minutos en el sitio, productos más vistos, de dónde llegan y clics a WhatsApp, igual que en K8', '', 'var(--warn)')}
+    <div class="sm" style="line-height:1.6">La web de TLA sí tiene Google Analytics (código <b>${esc(GA.measurement_id || 'G-B2Y42P43E7')}</b>), pero la cuenta de Google conectada al panel no tiene permiso para leerlo. Quien administra ese Analytics tiene que entrar a <b>Administrar › Administración de acceso a la propiedad</b> y agregar, con rol <b>Lector</b>, la misma cuenta de Google con la que se conectó el Analytics de K8. Apenas lo haga, el panel lo trae solo (cada hora) y esta página se completa igual que la de K8.</div>
+    ${GA.updated_at ? `<div class="xs muted" style="margin-top:8px">Último intento: ${timeAgo(GA.updated_at)}</div>` : ''}</div>`;
   const title = `<div class="page-head"><div><h1>Sitio web · TLA</h1><p>Lo que vende textillasamericas.cl mes a mes: pedidos pagados, lo que queda sin pagar y qué productos se llevan.</p></div><div class="actions"><button class="btn" data-print="Campañas · Sitio web TLA">${ICON.pdf(14)} Informe PDF</button></div></div>`;
   const monthPick = `<div class="row wrap no-print" style="margin:0 4px 14px;gap:10px">
     <div class="seg"><button data-wm="${pym}" title="Mes anterior" ${avail.length && !avail.includes(pym) ? 'disabled' : ''}>${ICON.chevL(13)}</button><button class="on" style="min-width:150px">${ymLabel(ym)}</button><button data-wm="${ymShift(ym, 1)}" title="Mes siguiente" ${ymShift(ym, 1) > ymNow() ? 'disabled' : ''}>${ICON.chevR(13)}</button></div>
     ${!isNow ? `<button class="btn sm" data-wm="${ymNow()}">Este mes</button>` : `<span class="sm muted">en curso · ${dayN} días</span>`}</div>`;
-  if (!has) return `${title}${cpTabs('web')}${bar}<div class="card">${empty('Sin pedidos de la tienda de TLA', 'Cuando el conector traiga los pedidos de WooCommerce aparecerán aquí')}</div>`;
+  if (!has) return `${title}${cpTabs('web')}${bar}${gaAviso}<div class="card">${empty('Sin pedidos de la tienda de TLA', 'Cuando el conector traiga los pedidos de WooCommerce aparecerán aquí')}</div>`;
   const sinPedidos = ultimo && daysBetween(ultimo, todayIso()) > 30 ? `<div class="card" style="margin-bottom:14px;padding:12px 16px;border-left:3px solid var(--warn)"><div class="sm"><b>La tienda de TLA no recibe pedidos desde el ${fmtDate(ultimo)}</b> (hace ${fmtInt(daysBetween(ultimo, todayIso()))} días). Vale la pena revisar que el pago y el carrito de textillasamericas.cl estén funcionando.</div></div>` : '';
-  return `${title}${cpTabs('web')}${bar}${sinPedidos}${monthPick}
+  return `${title}${cpTabs('web')}${bar}${gaAviso}${sinPedidos}${monthPick}
   <div class="grid g4" style="margin-bottom:14px">
     ${k('Vendido por la web', fmtShort(revenue), revenue, revPrev)}
     ${k('Pedidos pagados', fmtInt(paidM.length), paidM.length, paidOf(prevM).length)}
@@ -185,8 +193,9 @@ function campanasWebTla() {
 
 // ---------- Página ----------
 function campanasWeb() {
-  if (typeof cpTla === 'function' && cpTla()) return campanasWebTla();
-  const d = WEB.data; const has = !!(d && (d.ok || d.stale) && d.months);
+  const tla = typeof cpTla === 'function' && cpTla();
+  const d = tla ? WEB.dataTla : WEB.data; const TI = tla ? WEB.tiendaTla : WEB.tienda;
+  if (tla && !(d && (d.ok || d.stale) && d.months)) return campanasWebTla(); const has = !!(d && (d.ok || d.stale) && d.months);
   const months = has ? d.months : [];
   const avail = months.map(m => m.ym);
   if (!CP.wm || (avail.length && !avail.includes(CP.wm))) CP.wm = avail.includes(ymNow()) ? ymNow() : (avail[avail.length - 1] || ymNow());
@@ -231,8 +240,8 @@ function campanasWeb() {
   const evM = inYm(d && d.events); const ev = name => { const r = evM.find(e => e.event === name); return r ? { n: Number(r.n || 0), users: Number(r.users || 0) } : { n: 0, users: 0 }; };
   const cartU = ev('add_to_cart').users;
   // Pedidos reales de WooCommerce del mes: llegaron al pago (pedido creado), pagaron, no pagaron
-  const hasTienda = !!(WEB.tienda && WEB.tienda.orders && WEB.tienda.orders.length);
-  const ordersM = hasTienda ? WEB.tienda.orders.filter(o => o.date.startsWith(ym) && o.status !== 'trash') : [];
+  const hasTienda = !!(TI && TI.orders && TI.orders.length);
+  const ordersM = hasTienda ? TI.orders.filter(o => o.date.startsWith(ym) && o.status !== 'trash') : [];
   const paidM = ordersM.filter(o => ORDER_PAID.includes(o.status)), unpaidM = ordersM.filter(o => ORDER_UNPAID.includes(o.status)), refundM = ordersM.filter(o => o.status === 'refunded');
   const checkoutU = hasTienda ? ordersM.length : Math.max(ev('begin_checkout').users, ev('add_payment_info').users, ev('add_shipping_info').users);
   const buyU = hasTienda ? paidM.length : ev('purchase').users;
@@ -240,13 +249,13 @@ function campanasWeb() {
   const abandon = Math.max(0, cartU - buyU);
   const boughtItems = groupSum(paidM.flatMap(o => o.items.map(i => ({ name: i.name, qty: i.qty, total: i.total }))), r => r.name, ['qty', 'total']).map(o => ({ name: o.key, v: o.qty, title: fmtMoney(o.total) })).sort((a, b) => b.v - a.v);
   const unpaidItems = groupSum(unpaidM.flatMap(o => o.items.map(i => ({ name: i.name, qty: i.qty, total: i.total }))), r => r.name, ['qty', 'total']).map(o => ({ name: o.key, v: o.qty, title: fmtMoney(o.total) })).sort((a, b) => b.v - a.v);
-  const tiendaMeses = hasTienda ? groupSum(WEB.tienda.orders.filter(o => o.status !== 'trash'), o => o.date.slice(0, 7), ['total']).map(o => ({ ym: o.key, orders: WEB.tienda.orders.filter(x => x.date.startsWith(o.key)).length, paid: WEB.tienda.orders.filter(x => x.date.startsWith(o.key) && ORDER_PAID.includes(x.status)).length, revenue: WEB.tienda.orders.filter(x => x.date.startsWith(o.key) && ORDER_PAID.includes(x.status)).reduce((a, x) => a + Number(x.total || 0), 0) })).sort((a, b) => a.ym.localeCompare(b.ym)) : [];
+  const tiendaMeses = hasTienda ? groupSum(TI.orders.filter(o => o.status !== 'trash'), o => o.date.slice(0, 7), ['total']).map(o => ({ ym: o.key, orders: TI.orders.filter(x => x.date.startsWith(o.key)).length, paid: TI.orders.filter(x => x.date.startsWith(o.key) && ORDER_PAID.includes(x.status)).length, revenue: TI.orders.filter(x => x.date.startsWith(o.key) && ORDER_PAID.includes(x.status)).reduce((a, x) => a + Number(x.total || 0), 0) })).sort((a, b) => a.ym.localeCompare(b.ym)) : [];
   const evDaily = (has ? d.events_daily : []).filter(r => r.date.startsWith(ym));
   const evSeries = name => daily.map(r => { const x = evDaily.find(e => e.date === r.date && e.event === name); return { date: r.date, v: x ? Number(x.users || 0) : 0 }; });
   const cartItems = groupSum(itemsM, r => r.name, ['carts', 'purchases']).map(o => ({ name: o.key, v: o.carts, purchases: o.purchases })).filter(x => x.v).sort((a, b) => b.v - a.v);
   const formU = ev('form_submit').users, formStartU = ev('form_start').users, contactU = ev('contact_link_click').users, cotizarU = ev('popup_dtf_cotizar').users;
 
-  const title = `<div class="page-head"><div><h1>Sitio web</h1><p>Cómo le va a ${esc((d && d.site) || 'k8chile.cl')} mes a mes: visitas, de dónde llegan, qué miran y cuántos escriben al WhatsApp.</p></div><div class="actions"><button class="btn" data-print="Campañas · Sitio web">${ICON.pdf(14)} Informe PDF</button></div></div>`;
+  const title = `<div class="page-head"><div><h1>Sitio web${tla ? ' · TLA' : ''}</h1><p>Cómo le va a ${esc((d && d.site) || (tla ? 'textillasamericas.cl' : 'k8chile.cl'))} mes a mes: visitas, de dónde llegan, qué miran y cuántos escriben al WhatsApp.</p></div><div class="actions"><button class="btn" data-print="Campañas · Sitio web">${ICON.pdf(14)} Informe PDF</button></div></div>`;
   const monthPick = `<div class="row wrap no-print" style="margin:0 4px 14px;gap:10px">
     <div class="seg"><button data-wm="${ymShift(ym, -1)}" title="Mes anterior" ${avail.length && !avail.includes(ymShift(ym, -1)) ? 'disabled' : ''}>${ICON.chevL(13)}</button><button class="on" style="min-width:150px">${ymLabel(ym)}</button><button data-wm="${ymShift(ym, 1)}" title="Mes siguiente" ${ymShift(ym, 1) > ymNow() ? 'disabled' : ''}>${ICON.chevR(13)}</button></div>
     ${!isNow ? `<button class="btn sm" data-wm="${ymNow()}">Este mes</button>` : `<span class="sm muted">en curso · ${dayN} días</span>`}
@@ -254,7 +263,7 @@ function campanasWeb() {
 
   if (!has) {
     const err = d && d.error ? esc(d.error) : '';
-    return `${title}${cpTabs('web')}${webBar()}${monthPick}
+    return `${title}${cpTabs('web')}${webBar(d)}${monthPick}
     <div class="grid g4" style="margin-bottom:14px">${kpi('Visitas', '—', 'pendiente de conexión')}${kpi('Visitantes', '—', 'pendiente de conexión')}${kpi('Tiempo promedio', '—', 'pendiente de conexión')}${kpi('Clics a WhatsApp', '—', 'pendiente de conexión')}</div>
     <div class="card" style="border-left:3px solid var(--warn)">${cardHead(ICON.alert(15), 'Falta conectar Google Analytics', 'Tres pasos, una sola vez', '', 'var(--warn)')}
       <ol class="sm" style="margin:0;padding-left:20px;line-height:1.8">
@@ -267,7 +276,7 @@ function campanasWeb() {
     </div>`;
   }
 
-  return `${title}${cpTabs('web')}${webBar()}${monthPick}
+  return `${title}${cpTabs('web')}${webBar(d)}${monthPick}
   <div class="grid g4" style="margin-bottom:14px">
     ${k('Visitas', fmtInt(sessions), sessions, cmp('sessions'))}
     ${k('Visitantes', fmtInt(users), users, cmp('users'))}
