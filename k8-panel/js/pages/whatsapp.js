@@ -131,6 +131,14 @@ function campanasWhatsapp() {
   const recientes = [...chats].filter(c => !c.missing).sort((a, b) => b.t - a.t).slice(0, 15);
   const ultimos = textsIn.sort((a, b) => b.t - a.t).slice(0, 8);
   const perDay = days.length ? chatDaysIn / days.length : 0;
+  // Pendientes al empezar el día: clientes que escribieron y nadie les contestó, según cuándo escribieron
+  const ayer = (() => { const x = parseDay(hoy); x.setDate(x.getDate() - 1); return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`; })();
+  const espHoy = esperando.filter(c => dayOf(c.waiting_since) === hoy).length, espAyer = esperando.filter(c => dayOf(c.waiting_since) === ayer).length;
+  const espAntes = esperando.length - espHoy - espAyer;
+  // "Escribieron hoy" solo vale si ya hubo una captura hoy (si no, mostraría 0 aunque haya gente escribiendo)
+  const capHoy = has && d.captured_at && dayOf(new Date(d.captured_at).getTime() / 1000) === hoy;
+  const capHora = has && d.captured_at ? new Date(d.captured_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '';
+  const ayerIn = chats.filter(c => c.days && c.days[ayer] && Number(c.days[ayer].in || 0) > 0).length;
   const msgsIn = H('in').reduce((a, r) => a + r.v, 0), msgsOut = H('out').reduce((a, r) => a + r.v, 0);
   const completos = chats.filter(c => c.hist_complete).length;
   const histDesde = chats.reduce((a, c) => (c.hist_from && (!a || c.hist_from < a)) ? c.hist_from : a, 0);
@@ -157,16 +165,16 @@ function campanasWhatsapp() {
 
   return `${title}${cpTabs('whatsapp')}${waBar()}${periodo}
   <div class="grid g4" style="margin-bottom:14px">
-    ${kpi('Escribieron hoy', fmtInt(hoyIn), `clientes con mensajes hoy · promedio ${perDay.toLocaleString('es-CL', { maximumFractionDigits: 1 })} por día en el período (${fmtInt(wrote.length)} distintos)`)}
-    ${kpi('Chats nuevos', fmtInt(nuevos.length + retomados.length), `${fmtInt(nuevos.length)} nunca vistos${retomados.length ? ` · ${fmtInt(retomados.length)} que volvieron tras 30+ días sin escribir` : ''}${d.captures < 2 && !nuevos.length ? ' · los nunca vistos se cuentan desde la segunda captura' : ''}`)}
+    ${kpi('Por responder', fmtInt(esperando.length), esperando.length ? `clientes que escribieron y nadie les contestó · <b>${fmtInt(espHoy)}</b> de hoy · <b>${fmtInt(espAyer)}</b> de ayer · <b>${fmtInt(espAntes)}</b> de días anteriores (hasta 7 días) · el más antiguo ${waAgo(esperando[0].waiting_since)}` : 'nadie espera respuesta')}
     ${kpi('No leídos', fmtInt(unreadChats.length), `chats con mensajes sin leer · ${fmtInt(unreadMsgs)} mensajes`)}
-    ${kpi('Empresas · personas', `${fmtInt(tAct.empresa)} <span class="sm muted">/</span> ${fmtInt(tAct.persona)}`, `según etiquetas · ${fmtInt(tAct.sin)} de ${fmtInt(active.length)} activos sin etiquetar`)}
+    ${kpi('Escribieron hoy', capHoy ? fmtInt(hoyIn) : '—', capHoy ? `clientes con mensajes desde las 00:00 · datos de las ${capHora} · ayer escribieron ${fmtInt(ayerIn)} · promedio ${perDay.toLocaleString('es-CL', { maximumFractionDigits: 1 })} por día en el período` : `todavía no llega la captura de hoy (la última es de ${timeAgo(d.captured_at)}) · ayer escribieron ${fmtInt(ayerIn)} · abre WhatsApp Web para que se actualice`)}
+    ${kpi('Chats nuevos', fmtInt(nuevos.length + retomados.length), `${fmtInt(nuevos.length)} nunca vistos${retomados.length ? ` · ${fmtInt(retomados.length)} que volvieron tras 30+ días sin escribir` : ''}${d.captures < 2 && !nuevos.length ? ' · los nunca vistos se cuentan desde la segunda captura' : ''}`)}
   </div>
   <div class="grid g4" style="margin-bottom:14px">
     ${kpi('Tiempo de respuesta de K8', fmtResp(medK8), rK8.length ? `típico (mediana) · promedio ${fmtResp(avgK8)} · ${within1h}% en menos de 1 h · ${fmtInt(rK8.length)} respuestas` : 'sin respuestas en el período')}
     ${kpi('Tiempo de respuesta del cliente', fmtResp(medCli), rCli.length ? `típico · lo que tarda el cliente en contestar a K8 · ${fmtInt(rCli.length)} casos` : 'sin datos')}
     ${kpi('Mensajes', `${fmtInt(msgsIn)} <span class="sm muted">recibidos</span>`, `${fmtInt(msgsOut)} enviados por K8 en el período`)}
-    ${kpi('Esperando respuesta', fmtInt(esperando.length), esperando.length ? `clientes que escribieron y aún no se les contesta · el más antiguo ${waAgo(esperando[0].waiting_since)}` : 'nadie espera respuesta')}
+    ${kpi('Empresas · personas', `${fmtInt(tAct.empresa)} <span class="sm muted">/</span> ${fmtInt(tAct.persona)}`, `según etiquetas · ${fmtInt(tAct.sin)} de ${fmtInt(active.length)} activos sin etiquetar`)}
   </div>
   <div class="card" style="margin-bottom:14px">${cardHead(ICON.money(15), 'Ventas por WhatsApp', 'Chats con etiqueta En Gestión (venta cerrada) y el monto leído del comprobante que mandó el cliente', '', WA.c)}
     <div class="grid g4" style="margin-bottom:14px">
