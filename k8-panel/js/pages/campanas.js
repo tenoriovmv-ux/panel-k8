@@ -22,7 +22,9 @@ const cpPlatOk = c => cpTla() || !CP.plat || c.platform === CP.plat;
 const cpPlatSeg = () => cpTla() ? '' : `<div class="seg"><button class="${!CP.plat ? 'on' : ''}" data-cplat="">Ambas</button>${PLATFORMS.map(p => `<button class="${CP.plat === p.id ? 'on' : ''}" data-cplat="${p.id}">${p.name}</button>`).join('')}</div>`;
 const cpMarcas = () => `<div class="ivx-marcas no-print" role="tablist">${Object.entries(CP_MARCAS).map(([k, m]) => `<button class="ivx-marca${CP.marca === k ? ' on' : ''}" data-cpmarca="${k}" role="tab" aria-selected="${CP.marca === k}"><img src="${m.logo}" alt=""><span><b>${esc(m.nombre)}</b><small>${esc(m.alcance)}</small></span></button>`).join('')}</div>`;
 
-const cpTabs = on => `${['dashboard', 'analisis', 'lista', 'zonas', 'web'].includes(on) ? cpMarcas() : ''}<div class="tabs no-print">${[['dashboard', 'Dashboard'], ['analisis', 'Análisis'], ['lista', 'Todas las campañas'], ['zonas', 'Por zona'], ['web', 'Sitio web'], ['whatsapp', 'WhatsApp'], ['mercadolibre', 'Mercado Libre']].map(([k, l]) => `<button class="${on === k ? 'on' : ''}" data-go="campanas/${k}">${l}</button>`).join('')}</div>`;
+// Cada marca con su submenú: TLA no tiene WhatsApp ni Mercado Libre
+const CP_SOLO_K8 = ['whatsapp', 'mercadolibre'];
+const cpTabs = on => `${cpMarcas()}<div class="tabs no-print">${[['dashboard', 'Dashboard'], ['analisis', 'Análisis'], ['lista', 'Todas las campañas'], ['zonas', 'Por zona'], ['web', 'Sitio web'], ['whatsapp', 'WhatsApp'], ['mercadolibre', 'Mercado Libre']].filter(([k]) => !(cpTla() && CP_SOLO_K8.includes(k))).map(([k, l]) => `<button class="${on === k ? 'on' : ''}" data-go="campanas/${k}">${l}</button>`).join('')}</div>`;
 // Estado de las fuentes (Meta Ads / Google Ads): lo arma js/ads.js con lo que dejó el conector.
 const connBanner = () => cpTla() ? adsBarTla() : adsBar();
 const autoChip = c => `<span class="chip" title="Datos traídos de ${PLATFORMS.find(p => p.id === c.platform)?.name || 'la plataforma'}${c.dataAt ? ` · al ${fmtDate(c.dataAt)}` : ''}">${ICON.zap(11)} auto</span>`;
@@ -138,7 +140,7 @@ function bindCampanas(el) {
   $$('[data-cperiod]', el).forEach(b => b.onclick = () => { CP.period = b.dataset.cperiod; cpSave(); render(); });
   $$('[data-cfrom]', el).forEach(i => i.onchange = e => { CP.from = e.target.value; cpSave(); render(); });
   $$('[data-cto]', el).forEach(i => i.onchange = e => { CP.to = e.target.value; cpSave(); render(); });
-  $$('[data-cpmarca]', el).forEach(b => b.onclick = () => { CP.marca = b.dataset.cpmarca; cpSave(); render(); });
+  $$('[data-cpmarca]', el).forEach(b => b.onclick = () => { CP.marca = b.dataset.cpmarca; cpSave(); if (cpTla() && CP_SOLO_K8.includes(Router.parse().sec)) return Router.go('campanas/dashboard'); render(); });
   $$('[data-cplat]', el).forEach(b => b.onclick = () => { CP.plat = b.dataset.cplat; cpSave(); render(); });
   $$('[data-czone]', el).forEach(b => b.onclick = () => { CP.zone = b.dataset.czone; cpSave(); render(); });
   $$('[data-clstate]', el).forEach(b => b.onclick = () => { CP.lstate = b.dataset.clstate; cpSave(); render(); });
@@ -158,6 +160,6 @@ function bindCampanas(el) {
 
 PAGES.campanas = route => {
   const map = { dashboard: ['Campañas · Dashboard', campanasDashboard], analisis: ['Campañas · Análisis', campanasAnalisis], lista: ['Campañas · Lista', campanasLista], zonas: ['Campañas · Por zona', campanasZonas], web: ['Campañas · Sitio web', campanasWeb, bindWeb], whatsapp: ['Campañas · WhatsApp', campanasWhatsapp, bindWhatsapp], mercadolibre: ['Campañas · Mercado Libre', campanasMercadoLibre, bindMercadoLibre] };
-  const [title, fn, extra] = map[route.sec] || map.dashboard;
+  const [title, fn, extra] = (cpTla() && CP_SOLO_K8.includes(route.sec) ? null : map[route.sec]) || map.dashboard;
   return { title, html: fn(), mount: el => { bindCampanas(el); if (extra) extra(el); } };
 };

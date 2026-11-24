@@ -35,8 +35,8 @@ const APPS = [
       { id: 'lista',     name: 'Todas las campañas' },
       { id: 'zonas',     name: 'Por zona' },
       { id: 'web',       name: 'Sitio web' },
-      { id: 'whatsapp',  name: 'WhatsApp' },
-      { id: 'mercadolibre', name: 'Mercado Libre' },
+      { id: 'whatsapp',  name: 'WhatsApp', soloK8: true },        // WhatsApp y Mercado Libre son solo de K8: con TLA elegida no aparecen
+      { id: 'mercadolibre', name: 'Mercado Libre', soloK8: true },
     ] },
   { id: 'informes', name: 'Informes', icon: ICON.chart, c: 'var(--app-informes, #A78BFA)',
     sub: [
@@ -52,7 +52,7 @@ const appOf = id => APPS.find(a => a.id === id) || APPS[0];
 const ME = { id: 'vicente' };
 
 function sidebarHtml(route) {
-  const subs = a => a.sub.map(s => s.grp
+  const subs = a => a.sub.filter(s => !(s.soloK8 && typeof cpTla === 'function' && cpTla())).map(s => s.grp
     ? `<div class="grp">${s.grp}</div>`
     : `<button class="${route.app === a.id && `${route.sec}${route.sub ? '/' + route.sub : ''}` === s.id ? 'on' : ''}" data-nav="${a.id}/${s.id}">${s.name}</button>`).join('');
   const badges = { marketing: Store.list('tasks').filter(t => t.state !== 'done' && t.due && daysBetween(todayIso(), t.due) < 0).length };
